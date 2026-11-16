@@ -1,0 +1,347 @@
+# Remote Print - printer mini card + popup (Home Assistant dashboard, sections view)
+# Requires (HACS): button-card, browser_mod, card-mod.  Entities: written for the "HP Printer" integration (hpprinter);
+# replace  sensor.YOUR_PRINTER_  with the prefix of your printer sensors (status, black_toner_level, ...).
+# Replace  YOUR_INGRESS_TOKEN  with the token printed in the add-on log: "Ingress URL for the dashboard popup: ...".
+# Double tap the mini card -> printer popup -> "UPLOAD FILE AND PRINT" opens the add-on page inside a popup.
+
+# 1) mini card: put it in a section
+type: custom:button-card
+entity: sensor.YOUR_PRINTER_status
+name: Printer
+section_mode: true
+grid_options:
+  columns: 3
+  rows: 1.5
+show_name: false
+show_state: false
+show_icon: false
+show_entity_picture: false
+triggers_update:
+- sensor.YOUR_PRINTER_status
+- sensor.YOUR_PRINTER_black_toner_level
+tap_action:
+  action: none
+hold_action:
+  action: none
+custom_fields:
+  mk: |-
+    [[[
+
+    const s = states['sensor.YOUR_PRINTER_status']?.state || 'unavailable';
+    const tn = parseFloat(states['sensor.YOUR_PRINTER_black_toner_level']?.state);
+    const spenta = ['off', 'unavailable', 'unknown'].includes(s);
+    const stampa = /print|process|busy|warm/i.test(s);
+    const c = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : spenta ? '#8E9BB0' : '#30D158';
+
+    const w = isNaN(tn) ? 0 : Math.max(0, Math.min(100, tn)) * 0.3;
+    return `<div class="mk sp ${stampa ? 'st1' : ''}">
+      <svg viewBox="0 0 76 40" class="ic">
+        <rect class="fo" x="27" y="2" width="22" height="10" rx="1"/>
+        <rect class="co" x="19" y="10" width="38" height="17" rx="4"/>
+        <rect class="fe" x="25" y="24" width="26" height="4" rx="1.5"/>
+        <g class="usc"><rect class="fo" x="27" y="25" width="22" height="9" rx="1"/><path class="ri" d="M30 28 H46 M30 31 H42"/></g>
+        <circle class="led" cx="51" cy="15" r="1.6"/>
+        <rect class="tb" x="23" y="36.5" width="30" height="3" rx="1.5"/><rect class="tl" x="23" y="36.5" width="${w}" height="3" rx="1.5"/>
+      </svg>
+      <div class="nm">Printer <span class="pc">${isNaN(tn) ? '—' : Math.round(tn) + '%'}</span></div>
+      <div class="st">${spenta ? 'OFF' : stampa ? 'PRINTING…' : /powersave|sleep/i.test(s) ? 'SLEEP' : 'READY'}</div>
+    </div>`;
+    ]]]
+extra_styles: |2
+
+  .mk { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 100%; }
+  .ic { width: 66px; height: 36px; overflow: visible; filter: drop-shadow(0 0 4px var(--kc)); }
+  .nm { font-size: 11px; font-weight: 500; color: #fff; white-space: nowrap; }
+  .nm .pc { font-size: 10px; font-weight: 700; color: var(--kc); margin-left: 2px; }
+  .st { font-size: 10px; font-weight: 700; color: var(--kc); white-space: nowrap; letter-spacing: .3px; display: flex; align-items: center; gap: 3px; }
+  .cr .st { animation: mk_lamp .7s ease-in-out infinite; }
+  @keyframes mk_lamp { 50% { opacity: .35; } }
+  @keyframes mk_respiro { 50% { box-shadow: 0 0 16px color-mix(in srgb, var(--kc) 60%, transparent), inset 0 0 0 1px var(--kc); } }
+  .fi { transform-box: fill-box; transform-origin: 50% 100%; animation: mk_fiamma .9s ease-in-out infinite alternate; }
+  .fi2 { animation-duration: .65s; animation-delay: .2s; }
+  @keyframes mk_fiamma { 0% { transform: scale(1, 1) skewX(0); } 50% { transform: scale(.92, 1.1) skewX(-4deg); } 100% { transform: scale(1.04, .94) skewX(3deg); } }
+  @media (prefers-reduced-motion: reduce) { .mk *, ha-card { animation: none !important; } }
+
+  .sp .co { fill: #24213a; stroke: var(--kc); stroke-width: 1.6; }
+  .sp .fo { fill: #eef2f7; } .sp .fe { fill: #0b0a14; }
+  .sp .ri { stroke: #8a94a8; stroke-width: 1; }
+  .sp .usc { transform: translateY(-6px); }
+  .sp.st1 .usc { animation: sp_usc 2.2s ease-in-out infinite; }
+  @keyframes sp_usc { 0% { transform: translateY(-8px); } 100% { transform: translateY(2px); } }
+  .sp .led { fill: var(--kc); animation: mk_lamp 2s ease-in-out infinite; }
+  .sp .tb { fill: rgba(255,255,255,.12); } .sp .tl { fill: var(--kc); }
+styles:
+  card:
+  - border-radius: 12px
+  - padding: 6px 4px
+  - background: |-
+      [[[
+
+      const s = states['sensor.YOUR_PRINTER_status']?.state || 'unavailable';
+      const tn = parseFloat(states['sensor.YOUR_PRINTER_black_toner_level']?.state);
+      const spenta = ['off', 'unavailable', 'unknown'].includes(s);
+      const stampa = /print|process|busy|warm/i.test(s);
+      const c = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : spenta ? '#8E9BB0' : '#30D158';
+
+      return `radial-gradient(90% 80% at 50% 30%, ${c}2a, transparent 70%), linear-gradient(165deg, #1d1a2e, #0d0c16)`;
+      ]]]
+  - box-shadow: |-
+      [[[
+
+      const s = states['sensor.YOUR_PRINTER_status']?.state || 'unavailable';
+      const tn = parseFloat(states['sensor.YOUR_PRINTER_black_toner_level']?.state);
+      const spenta = ['off', 'unavailable', 'unknown'].includes(s);
+      const stampa = /print|process|busy|warm/i.test(s);
+      const c = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : spenta ? '#8E9BB0' : '#30D158';
+
+      return (!spenta || tn < 25) ? `0 0 10px ${c}55, inset 0 0 0 1px ${c}` : `inset 0 0 0 1px ${c}44`;
+      ]]]
+  - animation: |-
+      [[[
+
+      const s = states['sensor.YOUR_PRINTER_status']?.state || 'unavailable';
+      const tn = parseFloat(states['sensor.YOUR_PRINTER_black_toner_level']?.state);
+      const spenta = ['off', 'unavailable', 'unknown'].includes(s);
+      const stampa = /print|process|busy|warm/i.test(s);
+      const c = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : spenta ? '#8E9BB0' : '#30D158';
+
+      return (tn < 10) ? 'mk_respiro 1.6s ease-in-out infinite' : 'none';
+      ]]]
+  - --kc: |-
+      [[[
+
+      const s = states['sensor.YOUR_PRINTER_status']?.state || 'unavailable';
+      const tn = parseFloat(states['sensor.YOUR_PRINTER_black_toner_level']?.state);
+      const spenta = ['off', 'unavailable', 'unknown'].includes(s);
+      const stampa = /print|process|busy|warm/i.test(s);
+      const c = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : spenta ? '#8E9BB0' : '#30D158';
+
+      return c;
+      ]]]
+  - border: none
+  grid:
+  - grid-template-areas: '"mk"'
+  - grid-template-columns: 1fr
+  - grid-template-rows: 1fr
+  custom_fields:
+    mk:
+    - align-self: center
+    - width: 100%
+double_tap_action:
+  action: fire-dom-event
+  browser_mod:
+    service: browser_mod.popup
+    data:
+      popup_card_id: rp_printer
+
+# 2) the two popups: put them in a (hidden) section of the same view
+- type: custom:popup-card
+  popup_card_id: rp_printer
+  title: Printer
+  size: wide
+  dismissable: true
+  card:
+    type: vertical-stack
+    cards:
+    - type: custom:button-card
+      show_name: false
+      show_state: false
+      show_icon: false
+      show_label: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      styles:
+        card:
+        - padding: '0'
+        grid:
+        - grid-template-areas: '"p"'
+        - grid-template-columns: 1fr
+        custom_fields:
+          p:
+          - width: 100%
+      custom_fields:
+        p: |-
+          [[[
+          window.__spPopRender = () => {
+          const H = document.querySelector('home-assistant')?.hass?.states || {};
+
+          const P = 'sensor.YOUR_PRINTER_', sv = k => H[P + k]?.state;
+
+          const s = sv('status') || 'unavailable', tn = parseFloat(sv('black_toner_level'));
+          const spenta = ['off', 'unavailable', 'unknown'].includes(s), stampa = /print|process|busy|warm/i.test(s);
+          const A = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : '#30D158';
+          const pr = parseFloat(sv('black_toner_remaining')), fatte = parseFloat(sv('black_toner_total_impression'));
+          const fab = Date.parse(sv('black_toner_manufacture_date'));
+          const rs = /powersave|sleep/i.test(s);
+          const txt = spenta ? 'Off' : stampa ? 'Printing…' : rs ? 'Power saving: wakes up by itself' : 'Ready to print';
+          const avv = tn < 10 ? 'Toner almost empty: order a new one' : tn < 25 ? 'Toner low' : 'Toner OK';
+          return `<div class="pp" style="--a:${A}"><div class="w">
+            <div class="hd"><div class="bo"><ha-icon icon="mdi:printer" style="width:34px;height:34px;flex:0 0 34px;--mdc-icon-size:34px;color:var(--a)"></ha-icon></div>
+            <div class="t"><b>My printer</b><span>${txt}</span>
+            <div style="margin-top:6px"><div class="pill" style="--p:${spenta ? '#8a94a8' : stampa ? '#00CFFF' : rs ? '#FFD60A' : '#30D158'}">${spenta ? 'OFF' : stampa ? 'PRINTING' : rs ? 'SLEEP' : 'READY'}</div></div></div></div>
+            <div class="te" style="margin-top:12px"><small>Black toner</small><b style="--t:var(--a)">${isNaN(tn) ? '—' : Math.round(tn) + '%'}</b>
+            <div class="bar" style="height:12px;border-radius:6px"><i style="width:${isNaN(tn) ? 0 : tn}%"></i></div><i style="margin-top:4px">${avv}</i></div>
+            <div class="tg">
+              <div class="te"><small>Pages left</small><b>${isNaN(pr) ? '—' : '~' + pr}</b><i>toner estimate</i></div>
+              <div class="te"><small>Printed</small><b>${isNaN(fatte) ? '—' : fatte}</b><i>with this toner</i></div>
+              <div class="te"><small>Scans</small><b>${sv('scanner_total_pages_from_scanner_glass') ?? '—'}</b><i>from the glass</i></div>
+              <div class="te"><small>Misfeeds</small><b>${sv('printer_total_miss_picks') ?? '—'}</b><i>sheets not picked</i></div>
+              <div class="te" style="grid-column:1/-1"><small>Toner made</small><b>${isNaN(fab) ? '—' : new Date(fab).toLocaleDateString(navigator.language, {month: 'short', year: 'numeric'})}</b><i>cartridge production date</i></div>
+            </div></div>
+          </div>`;
+          };
+
+          // aggiornamento "chirurgico": confronta il nuovo HTML con quello a schermo e cambia solo testi/attributi diversi
+          window.__morph = (el, html) => {
+            const t = document.createElement('template'); t.innerHTML = html;
+            const patch = (a, b) => {
+              if (a.nodeType !== b.nodeType || a.nodeName !== b.nodeName) { a.replaceWith(b.cloneNode(true)); return; }
+              if (a.nodeType === 3 || a.nodeType === 8) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }
+              if (a.nodeType !== 1) return;
+              for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
+              for (const at of [...b.attributes]) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
+              figli(a, b);
+            };
+            const figli = (a, b) => {
+              const ac = [...a.childNodes], bc = [...b.childNodes], n = Math.min(ac.length, bc.length);
+              for (let i = 0; i < n; i++) patch(ac[i], bc[i]);
+              for (let i = n; i < ac.length; i++) ac[i].remove();
+              for (let i = n; i < bc.length; i++) a.appendChild(bc[i].cloneNode(true));
+            };
+            figli(el, t.content);
+          };
+          // vivo v2 (11/11/2026): ricerca condivisa e solo quando serve, pausa animazioni fuori schermo
+          window.__vivoTrova = (forza) => {
+            const ora = Date.now();
+            if (!forza && window.__vivoT && ora - window.__vivoT.t < 400) return window.__vivoT.els;
+            const out = [];
+            const trova = r => { r.querySelectorAll('[data-vivo]').forEach(e => out.push(e)); r.querySelectorAll('*').forEach(e => e.shadowRoot && trova(e.shadowRoot)); };
+            trova(document); window.__vivoT = {t: ora, els: out}; return out;
+          };
+          if (!window.__vivoIO && window.IntersectionObserver) window.__vivoIO = new IntersectionObserver(v => v.forEach(x => x.target.classList.toggle('vivo-fuori', !x.isIntersecting)), {threshold: 0});
+          window.__spPopKey = () => {
+            const H = document.querySelector('home-assistant')?.hass?.states || {};
+            if (!window.__spPopIds || Date.now() - window.__spPopIdsT > 60000) { window.__spPopIds = Object.keys(H).filter(i => i.startsWith('sensor.YOUR_PRINTER_')).sort(); window.__spPopIdsT = Date.now(); }
+            return window.__spPopIds.map(i => H[i] ? H[i].state + H[i].last_updated : '').join('|') + '';
+          };
+          if (!window.__spPopTimer) { let vuoto = 0; window.__spPopTimer = setInterval(() => {
+            let els = window.__spPopEls || [];
+            if (!els.length || els.some(e => !e.isConnected)) {
+              els = window.__vivoTrova().filter(e => e.hasAttribute('data-live-spPop')); window.__spPopEls = els;
+              if (window.__vivoIO) els.forEach(e => window.__vivoIO.observe(e));
+              if (!els.length) { if (++vuoto > 20) { clearInterval(window.__spPopTimer); window.__spPopTimer = null; window.__spPopEls = null; } return; }
+            }
+            vuoto = 0;
+            const h = document.querySelector('home-assistant')?.hass;
+            if (h === window.__spPopH) return;
+            window.__spPopH = h;
+            const k = window.__spPopKey();
+            for (const e of els) if (e.dataset.k !== k) { e.dataset.k = k; window.__morph(e, window.__spPopRender()); }
+          }, 250); }
+          return `<style>.vivo-fuori, .vivo-fuori *, .vivo-fuori *::before, .vivo-fuori *::after { animation-play-state: paused !important; }</style><div data-live-spPop data-vivo data-k="${window.__spPopKey()}">${window.__spPopRender()}</div>`;
+          ]]]
+      extra_styles: |2
+
+        ha-card { background: transparent !important; border: none !important; box-shadow: none !important; overflow: visible; }
+        .pp { display: flex; flex-direction: column; gap: 10px; color: #fff; text-align: left; width: 100%; }
+        .w { position: relative; overflow: hidden; border-radius: 18px; padding: 14px;
+             background: radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--a) 26%, transparent), transparent 60%), linear-gradient(160deg, #161a2e, #0b0e1a);
+             box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--a) 45%, transparent), 0 0 18px color-mix(in srgb, var(--a) 22%, transparent); }
+        .hd { display: flex; align-items: center; gap: 12px; }
+        .hd .bo { width: 56px; height: 56px; flex: none; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+                  background: color-mix(in srgb, var(--a) 18%, transparent); box-shadow: 0 0 16px color-mix(in srgb, var(--a) 40%, transparent);
+                  animation: pp_resp 2.8s ease-in-out infinite; }
+        @keyframes pp_resp { 50% { box-shadow: 0 0 26px color-mix(in srgb, var(--a) 70%, transparent); } }
+        .hd .t { flex: 1; min-width: 0; } .hd b { display: block; font-size: 20px; font-weight: 800; line-height: 1.15; }
+        .hd span { font-size: 12.5px; color: #aab4c8; }
+        .pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap;
+                background: color-mix(in srgb, var(--p, var(--a)) 18%, transparent); color: var(--p, var(--a)); border: 1px solid color-mix(in srgb, var(--p, var(--a)) 55%, transparent); }
+        .tg { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-top: 12px; }
+        .te { border-radius: 14px; padding: 9px 10px; background: rgba(255,255,255,.045); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); min-width: 0; }
+        .te small { display: block; font-size: 10px; color: #8a94a8; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+        .te b { display: block; font-size: 16px; font-weight: 800; margin-top: 2px; color: var(--t, #fff); overflow-wrap: anywhere; }
+        .te i { display: block; font-style: normal; font-size: 11px; color: #aab4c8; }
+        .sez { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #8a94a8; text-transform: uppercase; margin: 12px 2px 6px; }
+        .ls { display: flex; flex-direction: column; gap: 6px; }
+        .rw { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+        .rw .o { font-size: 15px; font-weight: 800; min-width: 44px; color: var(--a); }
+        .rw .x { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; line-height: 1.25; }
+        .rw .x small { display: block; color: #8a94a8; font-size: 11px; font-weight: 500; }
+        .rw.off { opacity: .45; }
+        .bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; margin-top: 6px; }
+        .bar i { display: block; height: 100%; border-radius: 4px; background: var(--a); box-shadow: 0 0 8px var(--a); }
+        .qr { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 10px; border-radius: 14px; background: #fff; color: #111; }
+        .qr img { width: 150px; height: 150px; flex: none; image-rendering: pixelated; }
+        .qr b { font-size: 16px; } .qr span { display: block; font-size: 12px; color: #444; margin-top: 4px; }
+    - type: custom:button-card
+      icon: mdi:file-upload
+      name: UPLOAD FILE AND PRINT
+      label: tap · pick a file on your phone, it prints at home
+      show_label: true
+      tap_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.javascript
+          data:
+            code: |-
+              (async () => {
+                const ha = document.querySelector('home-assistant');
+                const torna = 'rp_printer';
+                const apri = id => ha.dispatchEvent(new CustomEvent('ll-custom', {bubbles: true, composed: true,
+                  detail: {action: 'fire-dom-event', browser_mod: {service: 'browser_mod.popup', data: {popup_card_id: id}}}}));
+                try {
+                  const s = await ha.hass.callWS({type: 'supervisor/api', endpoint: '/ingress/session', method: 'post'});
+                  document.cookie = 'ingress_session=' + s.session + ';path=/api/hassio_ingress/;SameSite=Strict' + (location.protocol === 'https:' ? ';Secure' : '');
+                  if (window.__stpSess) clearInterval(window.__stpSess);
+                  let giri = 0;
+                  window.__stpSess = setInterval(() => {
+                    if (++giri > 15) { clearInterval(window.__stpSess); return; }
+                    ha.hass.callWS({type: 'supervisor/api', endpoint: '/ingress/validate_session', method: 'post', data: {session: s.session}}).catch(() => {});
+                  }, 240000);
+                } catch (e) {}
+                if (window.__stpMsg) window.removeEventListener('message', window.__stpMsg);
+                window.__stpMsg = ev => { if (ev.origin === location.origin && ev.data && ev.data.remote_print === 'back') apri(torna); };
+                window.addEventListener('message', window.__stpMsg);
+                apri(torna + '_carica');
+              })();
+      hold_action:
+        action: none
+      styles:
+        card:
+        - height: 58px
+        - padding: 6px 10px
+        - border-radius: 14px
+        - background: 'linear-gradient(160deg, #00CFFF33, #0b0e1a)'
+        - border: '1px solid #00CFFF88'
+        grid:
+        - grid-template-areas: '"i n" "i l"'
+        - grid-template-columns: 30px 1fr
+        - column-gap: 8px
+        img_cell:
+        - justify-content: center
+        icon:
+        - width: 26px
+        - color: '#00CFFF'
+        name:
+        - justify-self: start
+        - font-size: 13.5px
+        - font-weight: '800'
+        - color: '#fff'
+        label:
+        - justify-self: start
+        - font-size: 10.5px
+        - color: '#9aa4b8'
+      extra_styles: 'ha-card { transition: transform .15s; } ha-card:active { transform: scale(.95); }'
+- type: custom:popup-card
+  popup_card_id: rp_printer_carica
+  title: Remote Print
+  size: wide
+  dismissable: true
+  card:
+    type: iframe
+    url: /api/hassio_ingress/YOUR_INGRESS_TOKEN/?popup=rp_printer
+    aspect_ratio: 185%
+    card_mod:
+      style: 'ha-card { background: #0b0e1a !important; border: none !important; border-radius: 18px !important; overflow: hidden; }'

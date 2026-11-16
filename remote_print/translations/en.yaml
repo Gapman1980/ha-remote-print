@@ -1,0 +1,16 @@
+configuration:
+  printer_uri:
+    name: Printer URI
+    description: "IPP address of your printer, e.g. ipp://192.168.1.100/ipp/print (most AirPrint printers). Some use ipps:// or /ipp instead of /ipp/print."
+  paper:
+    name: Paper size
+    description: Default paper size.
+  duplex_default:
+    name: Two-sided by default
+    description: The 'two-sided' switch on the page starts turned on.
+  keep_days:
+    name: Keep uploaded files (days)
+    description: Uploaded files are deleted after this many days.
+  language:
+    name: Language
+    description: Page language. 'auto' follows the phone language (Italian or English).

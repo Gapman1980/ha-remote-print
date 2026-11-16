@@ -1,0 +1,16 @@
+configuration:
+  printer_uri:
+    name: Indirizzo stampante
+    description: "Indirizzo IPP della stampante, es. ipp://192.168.1.100/ipp/print (quasi tutte le stampanti AirPrint). Alcune usano ipps:// oppure /ipp al posto di /ipp/print."
+  paper:
+    name: Formato carta
+    description: Formato carta predefinito.
+  duplex_default:
+    name: Fronte/retro predefinito
+    description: L'interruttore 'Fronte/retro' della pagina parte già acceso.
+  keep_days:
+    name: Conserva i file caricati (giorni)
+    description: I file caricati vengono cancellati dopo questi giorni.
+  language:
+    name: Lingua
+    description: Lingua della pagina. 'auto' segue la lingua del telefono (italiano o inglese).

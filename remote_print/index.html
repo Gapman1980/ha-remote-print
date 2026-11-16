@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Remote Print</title>
+<style>
+:root { --a: #30D158; --b: #00CFFF; --bg: #0b0e1a; --card: #151a2e; --t: #fff; --m: #8a94a8; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; background: radial-gradient(120% 60% at 50% 0%, #1b2440 0%, var(--bg) 60%); color: var(--t);
+       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; min-height: 100vh; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 16px 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+.box { border-radius: 20px; padding: 16px; background: linear-gradient(160deg, #161a2e, #0b0e1a);
+       box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--a) 40%, transparent), 0 0 20px color-mix(in srgb, var(--a) 18%, transparent); }
+.top { display: flex; align-items: center; }
+.indietro { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px 10px 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,.18);
+            background: rgba(255,255,255,.07); color: #fff; font-size: 16px; font-weight: 800; transition: transform .15s; }
+.indietro:active { transform: scale(.94); } .indietro svg { width: 20px; height: 20px; }
+.hd { display: flex; align-items: center; gap: 14px; }
+.hd svg { width: 84px; height: 60px; flex: none; filter: drop-shadow(0 0 6px var(--a)); }
+.hd b { display: block; font-size: 22px; } .hd span { color: var(--m); font-size: 13px; }
+.co { fill: #24213a; stroke: var(--a); stroke-width: 1.6; } .fo { fill: #eef2f7; } .fe { fill: #05060c; }
+.ri { stroke: #8a94a8; stroke-width: 1; } .led { fill: var(--a); animation: lamp 2s ease-in-out infinite; }
+.usc { transform: translateY(-6px); } .lavora .usc { animation: esce 2s ease-in-out infinite; }
+@keyframes esce { from { transform: translateY(-9px); } to { transform: translateY(3px); } }
+@keyframes lamp { 50% { opacity: .3; } }
+.drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 150px; border-radius: 18px;
+        border: 2px dashed color-mix(in srgb, var(--b) 60%, transparent); background: color-mix(in srgb, var(--b) 7%, transparent);
+        text-align: center; padding: 16px; cursor: pointer; transition: transform .15s; }
+.drop:active { transform: scale(.98); }
+.drop .ic { font-size: 40px; animation: su 2.2s ease-in-out infinite; } @keyframes su { 50% { transform: translateY(-5px); } }
+.drop b { font-size: 18px; } .drop span { color: var(--m); font-size: 13px; }
+.drop.pieno { border-style: solid; border-color: var(--a); background: color-mix(in srgb, var(--a) 10%, transparent); }
+input[type=file] { display: none; }
+.riga { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 2px; border-bottom: 1px solid rgba(255,255,255,.07); }
+.riga:last-child { border: none; } .riga label { font-size: 15px; font-weight: 600; } .riga small { display: block; color: var(--m); font-size: 12px; font-weight: 400; }
+.step { display: flex; align-items: center; gap: 4px; }
+.step button { width: 38px; height: 38px; border-radius: 12px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); color: #fff; font-size: 20px; font-weight: 700; }
+.step output { min-width: 34px; text-align: center; font-size: 18px; font-weight: 800; }
+.sw { position: relative; width: 52px; height: 30px; flex: none; }
+.sw input { display: none; } .sw i { position: absolute; inset: 0; border-radius: 15px; background: rgba(255,255,255,.15); transition: .2s; }
+.sw i::after { content: ''; position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: .2s; }
+.sw input:checked + i { background: var(--a); box-shadow: 0 0 10px var(--a); } .sw input:checked + i::after { left: 25px; }
+.pg { width: 120px; padding: 9px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); color: #fff; font-size: 15px; text-align: center; }
+.vai { position: relative; overflow: hidden; width: 100%; height: 64px; border: none; border-radius: 18px; font-size: 20px; font-weight: 900; letter-spacing: 1px; color: #04210f;
+       background: linear-gradient(90deg, #30D158, #7CFFB0, #30D158); background-size: 200% 100%; animation: luce 3s linear infinite; box-shadow: 0 0 22px #30D15888; }
+.vai:disabled { filter: grayscale(1) brightness(.6); animation: none; box-shadow: none; }
+@keyframes luce { to { background-position: -200% 0; } }
+.vai .pr { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(255,255,255,.35); transition: width .2s; }
+.msg { min-height: 20px; text-align: center; font-size: 14px; font-weight: 700; }
+.msg.ok { color: var(--a); } .msg.ko { color: #FF453A; }
+.avv { display: none; padding: 10px 12px; border-radius: 14px; background: #FF9F0A22; border: 1px solid #FF9F0A; color: #FFD08A; font-size: 13px; font-weight: 700; }
+h3 { margin: 4px 2px 0; font-size: 12px; letter-spacing: 1px; color: var(--m); text-transform: uppercase; }
+.lv { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); }
+.lv .n { flex: 1; min-width: 0; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; } .lv .n small { display: block; color: var(--m); font-weight: 400; font-size: 12px; }
+.pill { padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800; white-space: nowrap; border: 1px solid; }
+.p-queued { color: #FFD60A; border-color: #FFD60A; } .p-printing { color: var(--b); border-color: var(--b); animation: lamp 1s infinite; }
+.p-done { color: var(--a); border-color: var(--a); } .p-canceled { color: var(--m); border-color: var(--m); }
+.x { border: none; background: #FF453A22; color: #FF6961; border-radius: 10px; padding: 6px 9px; font-weight: 800; font-size: 12px; }
+.vuoto { color: var(--m); font-size: 13px; text-align: center; padding: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><button class="indietro" id="indietro" type="button"><svg viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-t="back"></span></button></div>
+  <div class="box"><div class="hd" id="hd">
+    <svg viewBox="0 0 76 40"><rect class="fo" x="27" y="2" width="22" height="10" rx="1"/><rect class="co" x="19" y="10" width="38" height="17" rx="4"/>
+      <rect class="fe" x="25" y="24" width="26" height="4" rx="1.5"/><g class="usc"><rect class="fo" x="27" y="25" width="22" height="9" rx="1"/>
+      <path class="ri" d="M30 28 H46 M30 31 H42"/></g><circle class="led" cx="51" cy="15" r="1.6"/></svg>
+    <div><b data-t="title"></b><span data-t="subtitle"></span></div>
+  </div></div>
+  <div class="avv" id="avv"></div>
+  <label class="drop" id="drop" for="file"><div class="ic">📄</div><b id="dt"></b><span id="ds"></span></label>
+  <input type="file" id="file" accept=".pdf,.txt,.heic,.heif,image/*,application/pdf,text/plain">
+  <div class="box" style="padding:6px 16px">
+    <div class="riga"><label data-t="copies"></label><div class="step"><button type="button" id="meno">−</button><output id="cp">1</output><button type="button" id="piu">+</button></div></div>
+    <div class="riga"><label><span data-t="duplex"></span><small data-t="duplex_s"></small></label><label class="sw"><input type="checkbox" id="fr"><i></i></label></div>
+    <div class="riga"><label><span data-t="fit"></span><small data-t="fit_s"></small></label><label class="sw"><input type="checkbox" id="ad" checked><i></i></label></div>
+    <div class="riga"><label><span data-t="pages"></span><small data-t="pages_s"></small></label><input class="pg" id="pg" inputmode="numeric"></div>
+  </div>
+  <button class="vai" id="vai" disabled><span class="pr" id="pr"></span><span style="position:relative" data-t="print"></span></button>
+  <div class="msg" id="msg"></div>
+  <h3 data-t="recent"></h3>
+  <div id="lista" style="display:flex;flex-direction:column;gap:8px"><div class="vuoto">…</div></div>
+</div>
+<script>
+// Remote Print - Home Assistant add-on page (served through ingress)
+const CFG = __CONFIG__;   // filled by the add-on: {lang, paper, duplex}
+const I18N = {
+  it: {back: 'Indietro', title: 'Stampa da remoto', subtitle: 'Scegli un file: la stampante di casa lo stampa, anche se sei fuori.',
+       pick: 'Tocca per scegliere il file', pick_s: 'PDF, foto (JPG, PNG, HEIC) o testo · da File, Foto o iCloud', change: 'tocca per cambiarlo',
+       copies: 'Copie', duplex: 'Fronte/retro', duplex_s: 'stampa su entrambi i lati', fit: 'Adatta al foglio', fit_s: 'rimpicciolisce se serve',
+       pages: 'Pagine', pages_s: 'vuoto = tutte · es. 1-3,5', all: 'tutte', print: '🖨️ STAMPA A CASA', recent: 'Ultime stampe', none: 'Nessuna stampa ancora',
+       sent: '✓ Inviato! La stampante di casa sta per stamparlo', uploading: 'Caricamento…', lost: '✗ Connessione persa durante il caricamento',
+       weird: 'Risposta inattesa', error: 'Errore', copy1: 'copia', copyN: 'copie',
+       st: {queued: 'In coda', printing: 'Stampa…', done: 'Stampato ✓', canceled: 'Annullato'},
+       al: {'media-empty': 'Carta finita: aggiungi fogli', 'media-jam': 'Foglio inceppato', 'toner-low': 'Toner in esaurimento', 'toner-empty': 'Toner finito',
+            'marker-supply-low': 'Inchiostro/toner in esaurimento', 'door-open': 'Sportello aperto', 'cover-open': 'Coperchio aperto',
+            'offline': 'Stampante spenta o non raggiungibile: stamperà appena si riaccende'}},
+  en: {back: 'Back', title: 'Remote Print', subtitle: 'Pick a file: your home printer prints it, even when you are away.',
+       pick: 'Tap to choose a file', pick_s: 'PDF, photos (JPG, PNG, HEIC) or text · from Files, Photos or iCloud', change: 'tap to change it',
+       copies: 'Copies', duplex: 'Two-sided', duplex_s: 'print on both sides', fit: 'Fit to page', fit_s: 'shrinks it if needed',
+       pages: 'Pages', pages_s: 'empty = all · e.g. 1-3,5', all: 'all', print: '🖨️ PRINT AT HOME', recent: 'Recent prints', none: 'No prints yet',
+       sent: '✓ Sent! Your home printer is about to print it', uploading: 'Uploading…', lost: '✗ Connection lost while uploading',
+       weird: 'Unexpected answer', error: 'Error', copy1: 'copy', copyN: 'copies',
+       st: {queued: 'Queued', printing: 'Printing…', done: 'Printed ✓', canceled: 'Canceled'},
+       al: {'media-empty': 'Out of paper', 'media-jam': 'Paper jam', 'toner-low': 'Toner low', 'toner-empty': 'Toner empty',
+            'marker-supply-low': 'Ink/toner low', 'door-open': 'Door open', 'cover-open': 'Cover open',
+            'offline': 'Printer off or unreachable: it will print when it comes back'}},
+};
+const lang = CFG.lang && CFG.lang !== 'auto' ? CFG.lang : ((navigator.language || 'en').slice(0, 2) === 'it' ? 'it' : 'en');
+const T = I18N[lang] || I18N.en;
+const $ = id => document.getElementById(id);
+document.documentElement.lang = lang;
+document.querySelectorAll('[data-t]').forEach(e => e.textContent = T[e.dataset.t]);
+$('pg').placeholder = T.all; $('dt').textContent = T.pick; $('ds').textContent = T.pick_s;
+$('fr').checked = !!CFG.duplex;
+const POPUP = new URLSearchParams(location.search).get('popup');   // opened inside a dashboard popup (see examples/)
+if (POPUP) document.querySelector('.wrap > .box').style.display = 'none';
+// Back: inside a popup it asks the dashboard (postMessage) to reopen the printer popup; otherwise browser history
+$('indietro').onclick = () => {
+  if (POPUP) { window.parent.postMessage({remote_print: 'back', popup: POPUP}, location.origin); return; }
+  try { window.top.history.length > 1 ? window.top.history.back() : (window.top.location.href = '/'); } catch (e) { history.back(); }
+};
+let copies = 1, chosen = null;
+$('meno').onclick = () => { copies = Math.max(1, copies - 1); $('cp').textContent = copies; };
+$('piu').onclick = () => { copies = Math.min(20, copies + 1); $('cp').textContent = copies; };
+const kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+$('file').onchange = e => {
+  chosen = e.target.files[0] || null;
+  $('drop').classList.toggle('pieno', !!chosen);
+  $('dt').textContent = chosen ? chosen.name : T.pick;
+  $('ds').textContent = chosen ? kb(chosen.size) + ' · ' + T.change : T.pick_s;
+  $('vai').disabled = !chosen; $('msg').textContent = ''; $('msg').className = 'msg';
+};
+const msg = (t, ok) => { $('msg').textContent = t; $('msg').className = 'msg ' + (ok ? 'ok' : 'ko'); };
+$('vai').onclick = () => {
+  if (!chosen) return;
+  const fd = new FormData();
+  fd.append('copies', copies); fd.append('duplex', $('fr').checked ? '1' : '0');
+  fd.append('fit', $('ad').checked ? '1' : '0'); fd.append('pages', $('pg').value.trim()); fd.append('lang', lang);
+  fd.append('file', chosen, chosen.name);
+  const x = new XMLHttpRequest();
+  x.open('POST', 'print');
+  x.upload.onprogress = ev => { if (ev.lengthComputable) $('pr').style.width = (ev.loaded / ev.total * 100) + '%'; };
+  x.onload = () => {
+    $('pr').style.width = '0'; $('vai').disabled = false;
+    let r = {}; try { r = JSON.parse(x.responseText); } catch (e) { r = {ok: false, error: T.weird + ' (' + x.status + ')'}; }
+    if (r.ok) { msg(T.sent, true); $('file').value = ''; $('file').onchange({target: {files: []}}); load(); }
+    else msg('✗ ' + (r.error || T.error), false);
+  };
+  x.onerror = () => { $('pr').style.width = '0'; $('vai').disabled = false; msg(T.lost, false); };
+  $('vai').disabled = true; msg(T.uploading, true); x.send(fd);
+};
+async function load() {
+  try {
+    const r = await (await fetch('jobs', {cache: 'no-store'})).json();
+    const L = r.jobs || [];
+    $('lista').innerHTML = L.length ? L.map(j => `<div class="lv"><div class="n">${j.name.replace(/</g, '&lt;')}<small>${new Date(j.time * 1000).toLocaleString(lang, {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})} · ${j.copies} ${j.copies > 1 ? T.copyN : T.copy1}</small></div>
+      <span class="pill p-${j.state}">${T.st[j.state] || j.state}</span>${['queued', 'printing'].includes(j.state) ? `<button class="x" onclick="cancelJob(${j.id})">✕</button>` : ''}</div>`).join('')
+      : `<div class="vuoto">${T.none}</div>`;
+    const al = (r.alerts || []).map(a => T.al[a.replace(/-(warning|error|report)$/, '')] || a);
+    $('avv').style.display = al.length ? 'block' : 'none'; $('avv').textContent = '⚠️ ' + al.join(' · ');
+    $('hd').classList.toggle('lavora', L.some(j => j.state === 'printing'));
+  } catch (e) {}
+}
+async function cancelJob(id) { await fetch('cancel?id=' + id, {method: 'POST'}); load(); }
+load(); setInterval(load, 3000);
+</script>
+</body>
+</html>

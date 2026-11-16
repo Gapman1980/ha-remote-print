@@ -1,0 +1,29 @@
+name: Remote Print
+version: "1.0.0"
+slug: remote_print
+description: Upload a file from your phone (even away from home) and print it on your network printer. Driverless CUPS (IPP Everywhere / AirPrint).
+url: https://github.com/Gapman1980/ha-remote-print
+arch:
+  - aarch64
+  - amd64
+  - armv7
+startup: application
+boot: auto
+init: false
+ingress: true
+ingress_port: 8099
+hassio_api: true
+panel_icon: mdi:printer-wireless
+panel_title: Print
+options:
+  printer_uri: "ipp://192.168.1.100/ipp/print"
+  paper: A4
+  duplex_default: false
+  keep_days: 3
+  language: auto
+schema:
+  printer_uri: str
+  paper: list(A4|A5|Letter|Legal)
+  duplex_default: bool
+  keep_days: int(1,30)
+  language: list(auto|en|it)

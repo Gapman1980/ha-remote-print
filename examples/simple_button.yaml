@@ -1,0 +1,9 @@
+# Remote Print - simplest dashboard button (no custom cards needed)
+# Tapping it opens the add-on page. Replace the path with the one of your sidebar entry "Print"
+# (open it from the sidebar and copy the address, e.g. /a1b2c3d4_remote_print).
+type: button
+name: Print from phone
+icon: mdi:printer-wireless
+tap_action:
+  action: navigate
+  navigation_path: /a1b2c3d4_remote_print
