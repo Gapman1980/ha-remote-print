@@ -7,6 +7,8 @@ Upload a file from your phone — even when you are away from home — and your 
 <b>🇬🇧 English</b> · <a href="#-italiano">🇮🇹 Italiano</a>
 </p>
 
+<p align="center"><img src="docs/demo.gif" width="300" alt="Remote Print: printer popup, upload page, print, printed"></p>
+
 ---
 
 ## What it does
@@ -85,6 +87,10 @@ The web server only accepts requests coming from Home Assistant ingress (`172.30
 ## 🇮🇹 Italiano
 
 **Remote Print** ti permette di stampare a casa un file che hai sul telefono, anche quando sei fuori.
+
+### Come si presenta
+
+Nella GIF in alto: popup della stampante → **CARICA FILE E STAMPA** → scelta del file → **STAMPA A CASA** → "Stampato ✓".
 
 ### Cosa fa
 - Una pagina dentro Home Assistant (voce **Stampa** nel menu): scegli il file, copie, fronte/retro, adatta al foglio, pagine e premi **STAMPA A CASA**.

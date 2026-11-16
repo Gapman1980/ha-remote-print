@@ -145,6 +145,10 @@ async def print_file(request):
     if rc != 0 or not job:
         return web.json_response({"ok": False, "error": "CUPS: " + out.strip()[-200:]})
     jobs_ = read_jobs()
+    # CUPS restarts job numbers from 1 after an add-on restart/update: close older jobs with the same number
+    for j in jobs_:
+        if j["id"] == int(job.group(1)):
+            j["closed"] = True
     jobs_.append({"id": int(job.group(1)), "name": name, "copies": copies, "time": time.time(), "canceled": False})
     write_jobs(jobs_)
     return web.json_response({"ok": True, "id": int(job.group(1))})
@@ -162,6 +166,8 @@ async def jobs(request):
     for j in reversed(read_jobs()[-15:]):
         if j.get("canceled"):
             s = "canceled"
+        elif j.get("closed") or time.time() - j["time"] > 6 * 3600:
+            s = "done"
         elif j["id"] == now:
             s = "printing"
         elif j["id"] in op:

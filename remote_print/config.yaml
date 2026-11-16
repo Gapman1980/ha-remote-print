@@ -1,5 +1,5 @@
 name: Remote Print
-version: "1.0.0"
+version: "1.0.1"
 slug: remote_print
 description: Upload a file from your phone (even away from home) and print it on your network printer. Driverless CUPS (IPP Everywhere / AirPrint).
 url: https://github.com/Gapman1980/ha-remote-print
