@@ -72,6 +72,7 @@ available ones. Paper/toner alerts are not available in this mode.
 | HP LaserJet MFP M234dw | `driverless` | `ipp://IP/ipp/print` | – | ✅ works |
 | Brother HL-1212W | `brlaser` | `socket://IP:9100` | `HL-1200` | ✅ works |
 | Brother DCP-1612W | `brlaser` | `socket://IP:9100` | `DCP-1600` | ✅ works |
+| Pantum (laser) | `driverless` | `ipp://IP/ipp` | – | ✅ works |
 
 Tried another printer? Tell us in an [issue](https://github.com/Gapman1980/ha-remote-print/issues) (model + settings) and it will be added here.
 
@@ -169,6 +170,7 @@ Usa il driver libero [brlaser](https://github.com/pdewacht/brlaser). Se il model
 | HP LaserJet MFP M234dw | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona |
 | Brother HL-1212W | `brlaser` | `socket://IP:9100` | `HL-1200` | ✅ funziona |
 | Brother DCP-1612W | `brlaser` | `socket://IP:9100` | `DCP-1600` | ✅ funziona |
+| Pantum (laser) | `driverless` | `ipp://IP/ipp` | – | ✅ funziona |
 
 Hai provato un'altra stampante? Scrivilo in una [issue](https://github.com/Gapman1980/ha-remote-print/issues) (modello + impostazioni) e la aggiungiamo.
 
