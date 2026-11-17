@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.3
+- `printer_uri` and `brother_model` tolerate common typing mistakes: the label typed in the field too
+  (`printer_uri: socket://...`), quotes and spaces are removed (before: "Bad device-uri").
+
 ## 1.1.2
 - When the print queue is missing, the add-on now waits at most ~50 s for the printer instead of several minutes.
   Before, a printer without AirPrint could keep the upload open so long that the page only said "Connection lost".

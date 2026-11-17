@@ -4,9 +4,11 @@
 #   driver: brlaser    -> open source driver for Brother mono lasers that have no AirPrint
 #                         (DCP-1510/1600, HL-1200/L2300, MFC-1910/7360/L2710 ... families)
 OPT=/data/options.json
-URI=$(jq -r '.printer_uri' $OPT)
+# Forgive common typing mistakes in the UI fields: "printer_uri: socket://..." (label typed too), quotes, spaces
+URI=$(jq -r '.printer_uri' $OPT | sed -E 's/^[[:space:]]*[Pp][Rr][Ii][Nn][Tt][Ee][Rr]_?[Uu][Rr][Ii][[:space:]]*:[[:space:]]*//' | tr -d "\"' ")
 DRIVER=$(jq -r '.driver // "driverless"' $OPT)
-MODEL=$(jq -r '.brother_model // "DCP-1600"' $OPT)
+MODEL=$(jq -r '.brother_model // "DCP-1600"' $OPT | sed -E 's/^[[:space:]]*[Bb][Rr][Oo][Tt][Hh][Ee][Rr]_?[Mm][Oo][Dd][Ee][Ll][[:space:]]*:[[:space:]]*//' | tr -d "\"'" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+echo "Printer URI: $URI"
 case "$(jq -r '.paper // "A4"' $OPT)" in
   A5) MEDIA=iso_a5_148x210mm ;; Letter) MEDIA=na_letter_8.5x11in ;; Legal) MEDIA=na_legal_8.5x14in ;; *) MEDIA=iso_a4_210x297mm ;;
 esac
