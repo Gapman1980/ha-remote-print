@@ -20,3 +20,8 @@ configuration:
   language:
     name: Language
     description: Page language. 'auto' follows the phone language (Italian or English).
+  lan_access:
+    name: Direct access from the local network
+    description: "Off = only through Home Assistant (safe, admins only). On = also at http://HOME-ASSISTANT-IP:PORT after you set a port in the Network section, so non-admin users can use it in a Webpage card. Only local network addresses are accepted, but ANYONE on your Wi-Fi can print: never forward this port on the router."
+network:
+  8099/tcp: "Direct access port (only with lan_access on). Empty = disabled."

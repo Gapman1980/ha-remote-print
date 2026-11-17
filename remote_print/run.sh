@@ -8,6 +8,7 @@ echo "Printer: $URI"
 if /queue.sh; then
   echo "Queue RemotePrint ready"
   lpoptions -p RemotePrint -l | grep -iE "PageSize|Duplex|ColorModel" | cut -c1-120
+  grep -E 'cupsFilter2|^\*ColorModel ' /etc/cups/ppd/RemotePrint.ppd 2>/dev/null | cut -c1-140
 else
   echo "Queue not created now (printer off or wrong URI?): retrying at the first print"
   [ "$(jq -r '.driver // "driverless"' /data/options.json)" = "driverless" ] && \

@@ -20,3 +20,8 @@ configuration:
   language:
     name: Lingua
     description: Lingua della pagina. 'auto' segue la lingua del telefono (italiano o inglese).
+  lan_access:
+    name: Accesso diretto dalla rete di casa
+    description: "Spento = solo da Home Assistant (sicuro, solo amministratori). Acceso = anche da http://IP-HOME-ASSISTANT:PORTA dopo aver messo una porta nella sezione Rete, così anche gli utenti non amministratori la usano in una card Pagina web. Sono accettati solo indirizzi della rete locale, ma CHIUNQUE sia sul tuo Wi-Fi può stampare: non aprire mai questa porta sul router."
+network:
+  8099/tcp: "Porta per l accesso diretto (solo con lan_access acceso). Vuota = disattivata."

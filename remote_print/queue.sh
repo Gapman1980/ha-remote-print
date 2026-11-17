@@ -25,4 +25,17 @@ if [ "$DRIVER" = "brlaser" ]; then
 fi
 
 echo "Driver: driverless (IPP Everywhere / AirPrint)"
-exec lpadmin -p RemotePrint -E -v "$URI" -m everywhere -o printer-error-policy=retry-job -o media-default=$MEDIA
+lpadmin -p RemotePrint -E -v "$URI" -m everywhere -o printer-error-policy=retry-job -o media-default=$MEDIA || exit $?
+
+# URF (Apple raster) printers only understand 8-bit gray or 24-bit colour pages.
+# Some printers (e.g. Samsung M2070) end up with a 1-bit / black colour model in the generated PPD:
+# the page is sent as 1-bit URF and the printer prints random characters + blank sheets.
+# Force 8-bit sGray / sRGB on URF queues.
+PPDF=/etc/cups/ppd/RemotePrint.ppd
+if [ -f "$PPDF" ] && grep -q 'cupsFilter2: "image/urf' "$PPDF"; then
+  if grep -E 'cupsBitsPerColor (1|2|4)[^0-9]|cupsColorSpace (3|0)[^0-9]' "$PPDF" >/dev/null; then
+    sed -i -E 's/cupsBitsPerColor (1|2|4)([^0-9])/cupsBitsPerColor 8\2/g; s/cupsColorSpace (3|0)([^0-9])/cupsColorSpace 18\2/g' "$PPDF"
+    echo "URF printer: colour model forced to 8-bit (sGray/sRGB)"
+  fi
+fi
+exit 0

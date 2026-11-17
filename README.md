@@ -91,6 +91,7 @@ Tried another printer? Tell us in an [issue](https://github.com/Gapman1980/ha-re
 | `duplex_default` | `false` | "Two-sided" switch starts on |
 | `keep_days` | `3` | uploaded files are deleted after N days |
 | `language` | `auto` | `auto` (phone language), `en`, `it` |
+| `lan_access` | `false` | also open the page directly from the local network (see below) |
 
 ## Dashboard (optional)
 
@@ -104,7 +105,16 @@ its **Back** button returns to the printer popup.
 - Needs (HACS): [button-card](https://github.com/custom-cards/button-card), [browser_mod](https://github.com/thomasloven/hass-browser_mod), [card-mod](https://github.com/thomasloven/lovelace-card-mod).
 - Sensors are written for the HP Printer integration: replace `sensor.YOUR_PRINTER_` with your sensors.
 - Replace `YOUR_INGRESS_TOKEN` with the address shown in the add-on **Log**: `Ingress URL for the dashboard popup: /api/hassio_ingress/…/`.
-- Only **administrator** users can open add-on pages in Home Assistant.
+- Only **administrator** users can open add-on pages in Home Assistant. For other family members see *Non-admin users* below.
+
+### Non-admin users (`lan_access`)
+
+1. **Configuration** → turn on `lan_access`; in **Network** write a port, e.g. `8099` → **Save** → restart the add-on.
+2. Add a **Webpage** card with the URL `http://HOME-ASSISTANT-IP:8099/`.
+
+⚠️ Only local network addresses are accepted, but **anyone on your Wi-Fi can print** and there is no password.
+Never forward this port on your router. It works when Home Assistant is opened over plain `http://` at home:
+a page opened over `https://` (Nabu Casa, reverse proxy) cannot embed an `http://` address.
 
 ## How it works
 
@@ -185,7 +195,7 @@ Hai provato un'altra stampante? Scrivilo in una [issue](https://github.com/Gapma
 ### Card per la dashboard (facoltativa)
 - `examples/simple_button.yaml`: pulsante semplice che apre la pagina.
 - `examples/printer_card_popup.yaml`: mini card animata della stampante + popup con toner e contatori, e pulsante **CARICA FILE E STAMPA** che apre la pagina *dentro il popup* (con **Indietro** torni al popup). Servono button-card, browser_mod e card-mod; sostituisci `sensor.YOUR_PRINTER_` con i tuoi sensori e `YOUR_INGRESS_TOKEN` con l'indirizzo scritto nel Registro dell'add-on.
-- Le pagine degli add-on si aprono solo agli utenti **amministratori**.
+- Le pagine degli add-on si aprono solo agli utenti **amministratori**. Per gli altri: attiva `lan_access`, metti una porta (es. `8099`) nella sezione **Rete**, riavvia l'add-on e usa una card **Pagina web** con `http://IP-HOME-ASSISTANT:8099/`. ⚠️ Niente password: chiunque sia sul tuo Wi-Fi può stampare; non aprire mai la porta sul router; funziona solo aprendo Home Assistant in `http://` da casa (non da `https://` / Nabu Casa).
 
 ---
 

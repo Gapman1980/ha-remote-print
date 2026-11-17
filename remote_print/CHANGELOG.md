@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0
+- Fix for printers that only accept URF / Apple raster (e.g. Samsung M2070, #2): if the generated driver used a
+  1-bit black colour model, pages were sent as 1-bit URF and the printer printed random characters and blank sheets.
+  URF queues are now forced to 8-bit gray / colour. The add-on Log also shows the colour model, to help with reports.
+- New option `lan_access` (#3): with a port set in the **Network** section, the page also opens at
+  `http://HOME-ASSISTANT-IP:PORT/` so non-admin users can use it in a Webpage card. Off by default, local network
+  addresses only, no password: anyone on your Wi-Fi can print. Never forward this port on the router.
+
 ## 1.1.5
 - Photos (JPG, PNG, GIF, TIFF and converted HEIC) are turned into a PDF before printing. Some printers decode JPGs
   themselves and failed on modern phone photos (e.g. HP "DirectJPEG ERROR - Decoding Fail" with Samsung Ultra HDR

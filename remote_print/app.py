@@ -5,6 +5,7 @@ and print it on a network printer. CUPS creates a driverless queue (IPP Everywhe
 so PDF, photos (JPG/PNG/HEIC) and text are converted to whatever the printer accepts.
 """
 import asyncio
+import ipaddress
 import json
 import os
 import re
@@ -51,6 +52,7 @@ MEDIA = PAPER.get(OPT.get("paper", "A4"), "iso_a4_210x297mm")
 KEEP_DAYS = int(OPT.get("keep_days", 3))
 DRIVER = OPT.get("driver", "driverless")
 BROTHER_MODEL = re.sub(r"(?i)^\s*brother_?model\s*:\s*", "", str(OPT.get("brother_model", "DCP-1600"))).strip(" \"'")
+LAN_ACCESS = bool(OPT.get("lan_access", False))   # direct access on the add-on port (Network section), local network only
 CONFIG_JS = json.dumps({"lang": OPT.get("language", "auto"), "paper": OPT.get("paper", "A4"),
                         "duplex": bool(OPT.get("duplex_default", False))})
 
@@ -133,9 +135,18 @@ def cleanup_uploads():
 
 @web.middleware
 async def ingress_only(request, handler):
-    if request.remote != INGRESS_IP:
-        return web.Response(status=403, text="Only through Home Assistant")
+    if request.remote != INGRESS_IP and not (LAN_ACCESS and is_local(request.remote)):
+        return web.Response(status=403, text="Only through Home Assistant (or enable lan_access)")
     return await handler(request)
+
+
+def is_local(ip):
+    """lan_access: accept only private / local addresses, never the internet."""
+    try:
+        a = ipaddress.ip_address(ip or "")
+        return a.is_private or a.is_loopback or a.is_link_local
+    except ValueError:
+        return False
 
 
 async def page(request):
