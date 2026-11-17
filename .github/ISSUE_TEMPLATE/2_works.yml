@@ -1,0 +1,48 @@
+name: "✅ My printer works / La mia stampante funziona"
+description: "Add your printer to the tested list in the README / Aggiungi la tua stampante alla lista delle provate"
+title: "[Works] <printer model>"
+labels: ["tested printer"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! Your printer will be added to the **tested printers** table in the README.
+        Grazie! La tua stampante finirà nella tabella delle **stampanti provate** del README.
+  - type: input
+    id: printer
+    attributes:
+      label: "Printer brand and model / Marca e modello stampante"
+      placeholder: "e.g. Canon PIXMA G3570"
+    validations:
+      required: true
+  - type: dropdown
+    id: driver
+    attributes:
+      label: "driver"
+      options:
+        - "driverless"
+        - "brlaser"
+    validations:
+      required: true
+  - type: input
+    id: uri
+    attributes:
+      label: "printer_uri (replace the IP with IP / metti IP al posto dell'indirizzo)"
+      placeholder: "ipp://IP/ipp/print   or   socket://IP:9100"
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: "brother_model (only with brlaser / solo con brlaser)"
+      placeholder: "e.g. HL-1200"
+  - type: input
+    id: version
+    attributes:
+      label: "Add-on version / Versione add-on"
+      placeholder: "e.g. 1.1.5"
+  - type: textarea
+    id: notes
+    attributes:
+      label: "Notes / Note"
+      description: "Photos, two-sided, anything worth knowing / Foto, fronte/retro, altro da sapere"

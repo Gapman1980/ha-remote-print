@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "📖 Documentation / Istruzioni (README)"
+    url: https://github.com/Gapman1980/ha-remote-print#readme
+    about: "Installation, options, Brother printers, tested printers / Installazione, opzioni, Brother, stampanti provate"

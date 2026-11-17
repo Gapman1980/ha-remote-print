@@ -1,0 +1,80 @@
+name: "🛠️ Printing problem / Problema di stampa"
+description: "Something does not print or shows an error / Qualcosa non stampa o dà errore"
+title: "[Problem] <printer model>"
+labels: ["help"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! These details let me answer at the first try. You can write in **English or Italian**.
+        Grazie! Con questi dati ti rispondo al primo colpo. Puoi scrivere in **italiano o inglese**.
+
+        ⚠️ Do not paste passwords or tokens / Non incollare password o token.
+  - type: input
+    id: printer
+    attributes:
+      label: "Printer brand and model / Marca e modello stampante"
+      placeholder: "e.g. HP LaserJet MFP M234dw, Brother DCP-1612W, Epson ET-2810"
+    validations:
+      required: true
+  - type: dropdown
+    id: airprint
+    attributes:
+      label: "Does it print from an iPhone/iPad (AirPrint)? / Stampa da iPhone/iPad (AirPrint)?"
+      options:
+        - "Yes / Sì"
+        - "No"
+        - "I don't know / Non so"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: "Add-on version / Versione add-on"
+      description: "Settings → Apps → Remote Print"
+      placeholder: "e.g. 1.1.5"
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: "Configuration / Configurazione"
+      description: "Add-on → Configuration → ⋮ → Edit in YAML, copy everything / Configurazione → ⋮ → Modifica in YAML, copia tutto"
+      render: yaml
+      placeholder: |
+        printer_uri: ipp://192.168.1.50/ipp/print
+        driver: driverless
+        brother_model: DCP-1600
+        paper: A4
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: "What happens / Cosa succede"
+      description: "Error shown on the page, what the printer does, which file (PDF, photo...) / Errore sulla pagina, cosa fa la stampante, che file"
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: "Add-on Log / Registro dell'add-on"
+      description: "Add-on → Log tab, copy the last lines after a print attempt / scheda Registro, copia le ultime righe dopo un tentativo di stampa"
+      render: text
+  - type: dropdown
+    id: device
+    attributes:
+      label: "Printing from / Stampi da"
+      multiple: true
+      options:
+        - "iPhone / iPad - HA app"
+        - "Android - HA app"
+        - "Browser (phone or PC)"
+  - type: dropdown
+    id: install
+    attributes:
+      label: "Home Assistant installation / Installazione"
+      options:
+        - "HA OS (Raspberry Pi, mini PC, VM...)"
+        - "Supervised"
+        - "Container / Core (no apps: the add-on cannot run)"

@@ -67,6 +67,9 @@ available ones. Paper/toner alerts are not available in this mode.
 
 ### Printers tested by users
 
+Yours works? [Tell me here](https://github.com/Gapman1980/ha-remote-print/issues/new?template=2_works.yml) and it goes in the list.
+Something wrong? [Open a problem report](https://github.com/Gapman1980/ha-remote-print/issues/new?template=1_problem.yml): it asks exactly what I need to help you.
+
 | Printer | `driver` | `printer_uri` | `brother_model` | Result |
 |---|---|---|---|---|
 | HP LaserJet MFP M234dw | `driverless` | `ipp://IP/ipp/print` | – | ✅ works |
@@ -165,6 +168,9 @@ Alcune Brother laser economiche (es. **DCP-1610W**, HL-1210W, MFC-1910W) stampan
 Usa il driver libero [brlaser](https://github.com/pdewacht/brlaser). Se il modello non viene trovato, il Registro elenca quelli disponibili. In questa modalità non ci sono gli avvisi carta/toner.
 
 ### Stampanti provate dagli utenti
+
+La tua funziona? [Dimmelo qui](https://github.com/Gapman1980/ha-remote-print/issues/new?template=2_works.yml) e la aggiungo alla lista.
+Qualcosa non va? [Apri una segnalazione](https://github.com/Gapman1980/ha-remote-print/issues/new?template=1_problem.yml): ti chiede esattamente quello che mi serve per aiutarti.
 
 | Stampante | `driver` | `printer_uri` | `brother_model` | Esito |
 |---|---|---|---|---|
