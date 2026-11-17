@@ -94,7 +94,7 @@ const I18N = {
        pick: 'Tocca per scegliere il file', pick_s: 'PDF, foto (JPG, PNG, HEIC) o testo · da File, Foto o iCloud', change: 'tocca per cambiarlo',
        copies: 'Copie', duplex: 'Fronte/retro', duplex_s: 'stampa su entrambi i lati', fit: 'Adatta al foglio', fit_s: 'rimpicciolisce se serve',
        pages: 'Pagine', pages_s: 'vuoto = tutte · es. 1-3,5', all: 'tutte', print: '🖨️ STAMPA A CASA', recent: 'Ultime stampe', none: 'Nessuna stampa ancora',
-       sent: '✓ Inviato! La stampante di casa sta per stamparlo', uploading: 'Caricamento…', lost: '✗ Connessione persa durante il caricamento',
+       sent: '✓ Inviato! La stampante di casa sta per stamparlo', uploading: 'Caricamento…', lost: '✗ Connessione persa durante il caricamento', lost2: '✗ File inviato ma nessuna risposta: guarda il Registro dell\'add-on (stampante raggiungibile? driver giusto?)',
        weird: 'Risposta inattesa', error: 'Errore', copy1: 'copia', copyN: 'copie',
        st: {queued: 'In coda', printing: 'Stampa…', done: 'Stampato ✓', canceled: 'Annullato'},
        al: {'media-empty': 'Carta finita: aggiungi fogli', 'media-jam': 'Foglio inceppato', 'toner-low': 'Toner in esaurimento', 'toner-empty': 'Toner finito',
@@ -104,7 +104,7 @@ const I18N = {
        pick: 'Tap to choose a file', pick_s: 'PDF, photos (JPG, PNG, HEIC) or text · from Files, Photos or iCloud', change: 'tap to change it',
        copies: 'Copies', duplex: 'Two-sided', duplex_s: 'print on both sides', fit: 'Fit to page', fit_s: 'shrinks it if needed',
        pages: 'Pages', pages_s: 'empty = all · e.g. 1-3,5', all: 'all', print: '🖨️ PRINT AT HOME', recent: 'Recent prints', none: 'No prints yet',
-       sent: '✓ Sent! Your home printer is about to print it', uploading: 'Uploading…', lost: '✗ Connection lost while uploading',
+       sent: '✓ Sent! Your home printer is about to print it', uploading: 'Uploading…', lost: '✗ Connection lost while uploading', lost2: '✗ File sent but no answer: check the add-on Log (printer reachable? right driver?)',
        weird: 'Unexpected answer', error: 'Error', copy1: 'copy', copyN: 'copies',
        st: {queued: 'Queued', printing: 'Printing…', done: 'Printed ✓', canceled: 'Canceled'},
        al: {'media-empty': 'Out of paper', 'media-jam': 'Paper jam', 'toner-low': 'Toner low', 'toner-empty': 'Toner empty',
@@ -152,7 +152,9 @@ $('vai').onclick = () => {
     if (r.ok) { msg(T.sent, true); $('file').value = ''; $('file').onchange({target: {files: []}}); load(); }
     else msg('✗ ' + (r.error || T.error), false);
   };
-  x.onerror = () => { $('pr').style.width = '0'; $('vai').disabled = false; msg(T.lost, false); };
+  let sent = false;   // upload finished: a later error means the server did not answer in time, not a bad upload
+  x.upload.onload = () => { sent = true; };
+  x.onerror = () => { $('pr').style.width = '0'; $('vai').disabled = false; msg(sent ? T.lost2 : T.lost, false); };
   $('vai').disabled = true; msg(T.uploading, true); x.send(fd);
 };
 async function load() {

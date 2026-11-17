@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.2
+- When the print queue is missing, the add-on now waits at most ~50 s for the printer instead of several minutes.
+  Before, a printer without AirPrint could keep the upload open so long that the page only said "Connection lost".
+- Clearer errors: printers without AirPrint / IPP Everywhere get a hint to use `driver: brlaser` (Brother lasers),
+  also in the add-on Log; "file sent but no answer" is now told apart from a real upload failure.
+
 ## 1.1.1
 - Android: the file picker now opens without type filters. With filters the Home Assistant Android app could crash
   when returning from the picker (back to the dashboard, picker stuck until the app was closed). The add-on still

@@ -10,6 +10,8 @@ if /queue.sh; then
   lpoptions -p RemotePrint -l | grep -iE "PageSize|Duplex|ColorModel" | cut -c1-120
 else
   echo "Queue not created now (printer off or wrong URI?): retrying at the first print"
+  [ "$(jq -r '.driver // "driverless"' /data/options.json)" = "driverless" ] && \
+    echo "Hint: driverless needs a printer with AirPrint / IPP Everywhere. Brother laser without AirPrint? Use driver: brlaser + socket://PRINTER-IP:9100"
 fi
 # show the ingress URL (needed by the dashboard popup example, see README)
 INGRESS=$(curl -s -H "Authorization: Bearer $SUPERVISOR_TOKEN" http://supervisor/addons/self/info | jq -r '.data.ingress_url')
