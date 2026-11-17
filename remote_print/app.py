@@ -86,6 +86,32 @@ async def ensure_queue():
     return False, last.strip()[-200:]
 
 
+IMAGES = (".jpg", ".jpeg", ".png", ".gif", ".tif", ".tiff")
+
+
+def image_to_pdf(path):
+    """Photo -> one-page PDF. With a JPG the printer often decodes it itself ("DirectJPEG") and some models fail on
+    modern phone photos (Ultra HDR gain map, progressive, huge EXIF). A PDF is rendered by CUPS/Ghostscript instead.
+    Also applies the EXIF rotation and shrinks huge photos (200 MP phones) to 300 dpi on A4."""
+    from PIL import Image, ImageOps
+    with Image.open(path) as src:
+        src.draft("RGB", (4000, 4000))          # fast JPEG downscale while decoding
+        im = ImageOps.exif_transpose(src)        # also loads only the first frame of GIF/TIFF
+        im.thumbnail((3600, 3600))
+        if im.mode in ("RGBA", "LA", "P", "PA"):
+            im = im.convert("RGBA")
+            bg = Image.new("RGB", im.size, "white")
+            bg.paste(im, mask=im.getchannel("A"))
+            im = bg
+        elif im.mode not in ("RGB", "L"):
+            im = im.convert("RGB")
+        w, h = im.size
+        dpi = max(max(w, h) / 11.0, min(w, h) / 7.8, 72)   # page fits A4/Letter with margins, either orientation
+        out = path.rsplit(".", 1)[0] + ".pdf"
+        im.save(out, "PDF", resolution=dpi, quality=92)
+    return out
+
+
 def read_jobs():
     try:
         return json.load(open(JOBS_FILE))
@@ -151,6 +177,11 @@ async def print_file(request):
         if rc != 0:
             return web.json_response({"ok": False, "error": m["heic"]})
         path = jpg
+    if path.lower().endswith(IMAGES):
+        try:
+            path = await asyncio.to_thread(image_to_pdf, path)
+        except Exception as e:   # keep the original photo: the printer may still manage it
+            print(f"Photo -> PDF failed, sending the original: {e}", flush=True)
     ok, err = await ensure_queue()
     if not ok:
         if err.startswith("model:"):

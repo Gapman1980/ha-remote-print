@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.5
+- Photos (JPG, PNG, GIF, TIFF and converted HEIC) are turned into a PDF before printing. Some printers decode JPGs
+  themselves and failed on modern phone photos (e.g. HP "DirectJPEG ERROR - Decoding Fail" with Samsung Ultra HDR
+  photos). Rotation from the phone is applied, very large photos are reduced to 300 dpi. If the conversion fails the
+  original photo is sent as before.
+
 ## 1.1.4
 - With `driver: brlaser`, a `brother_model` that matches no driver now shows a clear message with the full list
   of supported models (before only the last part of the list, inside "Printer not reachable"), without retrying.
