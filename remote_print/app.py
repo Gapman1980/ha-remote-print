@@ -18,6 +18,8 @@ UPLOADS = "/data/uploads"
 JOBS_FILE = "/data/jobs.json"
 INGRESS_IP = "172.30.32.2"   # only Home Assistant ingress may talk to this server
 EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".gif", ".tif", ".tiff", ".heic", ".heif", ".txt"}
+MIME_EXT = {"application/pdf": ".pdf", "image/jpeg": ".jpg", "image/png": ".png", "image/gif": ".gif", "image/tiff": ".tif",
+            "image/heic": ".heic", "image/heif": ".heif", "text/plain": ".txt"}
 PAPER = {"A4": "iso_a4_210x297mm", "A5": "iso_a5_148x210mm", "Letter": "na_letter_8.5x11in", "Legal": "na_legal_8.5x14in"}
 
 MSG = {
@@ -107,6 +109,10 @@ async def print_file(request):
         if part.name == "file" and part.filename:
             name = os.path.basename(part.filename)
             ext = os.path.splitext(name)[1].lower()
+            if ext not in EXTENSIONS:   # Android file pickers sometimes give names without extension: use the MIME type
+                ext = MIME_EXT.get((part.headers.get("Content-Type") or "").split(";")[0].strip().lower(), ext)
+                if ext in EXTENSIONS:
+                    name = (os.path.splitext(name)[0] or "file") + ext
             if ext not in EXTENSIONS:
                 lang = fields.get("lang") if fields.get("lang") in MSG else "en"
                 return web.json_response({"ok": False, "error": MSG[lang]["format"].format(ext or "?")})

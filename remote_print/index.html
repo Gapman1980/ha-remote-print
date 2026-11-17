@@ -86,6 +86,9 @@ h3 { margin: 4px 2px 0; font-size: 12px; letter-spacing: 1px; color: var(--m); t
 <script>
 // Remote Print - Home Assistant add-on page (served through ingress)
 const CFG = __CONFIG__;   // filled by the add-on: {lang, paper, duplex}
+// 1.1.1: on Android the Home Assistant app could crash when returning from a filtered file picker
+// (accept with extensions like .heic/.pdf). There the picker opens without filters; the add-on checks the type itself.
+if (/Android/i.test(navigator.userAgent)) document.getElementById('file').removeAttribute('accept');
 const I18N = {
   it: {back: 'Indietro', title: 'Stampa da remoto', subtitle: 'Scegli un file: la stampante di casa lo stampa, anche se sei fuori.',
        pick: 'Tocca per scegliere il file', pick_s: 'PDF, foto (JPG, PNG, HEIC) o testo · da File, Foto o iCloud', change: 'tocca per cambiarlo',
