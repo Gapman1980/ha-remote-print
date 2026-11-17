@@ -73,6 +73,7 @@ available ones. Paper/toner alerts are not available in this mode.
 | Brother HL-1212W | `brlaser` | `socket://IP:9100` | `HL-1200` | ✅ works |
 | Brother DCP-1612W | `brlaser` | `socket://IP:9100` | `DCP-1600` | ✅ works |
 | Pantum (laser) | `driverless` | `ipp://IP/ipp` | – | ✅ works |
+| Canon GX2000 series (GX2051, ink) | `driverless` | `ipp://IP/ipp/print` | – | ✅ works ([#1](https://github.com/Gapman1980/ha-remote-print/issues/1)) |
 
 Tried another printer? Tell us in an [issue](https://github.com/Gapman1980/ha-remote-print/issues) (model + settings) and it will be added here.
 
@@ -171,6 +172,7 @@ Usa il driver libero [brlaser](https://github.com/pdewacht/brlaser). Se il model
 | Brother HL-1212W | `brlaser` | `socket://IP:9100` | `HL-1200` | ✅ funziona |
 | Brother DCP-1612W | `brlaser` | `socket://IP:9100` | `DCP-1600` | ✅ funziona |
 | Pantum (laser) | `driverless` | `ipp://IP/ipp` | – | ✅ funziona |
+| Canon GX2000 series (GX2051, inkjet) | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona ([#1](https://github.com/Gapman1980/ha-remote-print/issues/1)) |
 
 Hai provato un'altra stampante? Scrivilo in una [issue](https://github.com/Gapman1980/ha-remote-print/issues) (modello + impostazioni) e la aggiungiamo.
 
