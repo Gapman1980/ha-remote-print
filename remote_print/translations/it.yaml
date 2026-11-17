@@ -2,6 +2,12 @@ configuration:
   printer_uri:
     name: Indirizzo stampante
     description: "Indirizzo IPP della stampante, es. ipp://192.168.1.100/ipp/print (quasi tutte le stampanti AirPrint). Alcune usano ipps:// oppure /ipp al posto di /ipp/print."
+  driver:
+    name: Driver
+    description: "driverless = stampanti AirPrint / IPP Everywhere (quasi tutte). brlaser = laser Brother in bianco e nero SENZA AirPrint (es. DCP-1610W): in questo caso l'indirizzo è socket://IP-STAMPANTE:9100."
+  brother_model:
+    name: Modello Brother (solo brlaser)
+    description: "Parte del nome del modello per scegliere il driver brlaser, es. DCP-1600, HL-1200, MFC-L2710. Se non lo trova, il Registro elenca i modelli disponibili."
   paper:
     name: Formato carta
     description: Formato carta predefinito.

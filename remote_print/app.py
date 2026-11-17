@@ -59,8 +59,7 @@ async def ensure_queue():
         return True, ""
     last = ""
     for _ in range(3):   # printers in power-save mode sometimes answer slowly
-        rc, last = await run("lpadmin", "-p", QUEUE, "-E", "-v", PRINTER_URI, "-m", "everywhere",
-                             "-o", "printer-error-policy=retry-job", "-o", f"media-default={MEDIA}", timeout=90)
+        rc, last = await run("/queue.sh", timeout=90)   # driverless or brlaser, from the options
         if rc == 0:
             await run("cupsenable", QUEUE)
             await run("cupsaccept", QUEUE)

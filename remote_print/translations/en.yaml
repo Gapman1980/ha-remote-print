@@ -2,6 +2,12 @@ configuration:
   printer_uri:
     name: Printer URI
     description: "IPP address of your printer, e.g. ipp://192.168.1.100/ipp/print (most AirPrint printers). Some use ipps:// or /ipp instead of /ipp/print."
+  driver:
+    name: Driver
+    description: "driverless = AirPrint / IPP Everywhere printers (almost all). brlaser = Brother mono lasers WITHOUT AirPrint (e.g. DCP-1610W): then the address is socket://PRINTER-IP:9100."
+  brother_model:
+    name: Brother model (brlaser only)
+    description: "Part of the model name used to pick the brlaser driver, e.g. DCP-1600, HL-1200, MFC-L2710. If nothing matches, the Log lists the available models."
   paper:
     name: Paper size
     description: Default paper size.

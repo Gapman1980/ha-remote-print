@@ -1,11 +1,11 @@
 #!/bin/sh
-# Remote Print: start CUPS (container-only), create the driverless queue, then the ingress web page (port 8099)
+# Remote Print: start CUPS (container-only), create the queue (driverless or brlaser, see queue.sh), then the ingress web page (port 8099)
 mkdir -p /data/uploads /run/cups
 cupsd
 sleep 2
 URI=$(jq -r '.printer_uri' /data/options.json)
 echo "Printer: $URI"
-if lpadmin -p RemotePrint -E -v "$URI" -m everywhere -o printer-error-policy=retry-job; then
+if /queue.sh; then
   echo "Queue RemotePrint ready"
   lpoptions -p RemotePrint -l | grep -iE "PageSize|Duplex|ColorModel" | cut -c1-120
 else

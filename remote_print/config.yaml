@@ -1,7 +1,7 @@
 name: Remote Print
-version: "1.0.1"
+version: "1.1.0"
 slug: remote_print
-description: Upload a file from your phone (even away from home) and print it on your network printer. Driverless CUPS (IPP Everywhere / AirPrint).
+description: Upload a file from your phone (even away from home) and print it on your network printer. Driverless CUPS (IPP Everywhere / AirPrint), plus brlaser for Brother lasers without AirPrint.
 url: https://github.com/Gapman1980/ha-remote-print
 arch:
   - aarch64
@@ -17,12 +17,16 @@ panel_icon: mdi:printer-wireless
 panel_title: Print
 options:
   printer_uri: "ipp://192.168.1.100/ipp/print"
+  driver: driverless
+  brother_model: "DCP-1600"
   paper: A4
   duplex_default: false
   keep_days: 3
   language: auto
 schema:
   printer_uri: str
+  driver: list(driverless|brlaser)
+  brother_model: str
   paper: list(A4|A5|Letter|Legal)
   duplex_default: bool
   keep_days: int(1,30)

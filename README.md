@@ -23,7 +23,7 @@ Upload a file from your phone — even when you are away from home — and your 
 ## Requirements
 
 - Home Assistant **OS** or **Supervised** (add-ons are needed).
-- A network printer that supports **IPP / AirPrint** (almost every printer sold in the last 10 years: HP, Brother, Canon, Epson, Samsung, Kyocera…). Give it a fixed IP address on your router.
+- A network printer that supports **IPP / AirPrint** (almost every printer sold in the last 10 years: HP, Brother, Canon, Epson, Samsung, Kyocera…), **or** a Brother mono laser without AirPrint (see *Brother lasers* below). Give it a fixed IP address on your router.
 
 ## Installation
 
@@ -40,11 +40,27 @@ Most printers: `ipp://PRINTER-IP/ipp/print` (e.g. `ipp://192.168.1.100/ipp/print
 If it does not work try `ipps://PRINTER-IP/ipp/print` or `ipp://PRINTER-IP/ipp`.
 The **Log** tab tells you if the queue was created: `Queue RemotePrint ready`.
 
+### Brother lasers without AirPrint (new in 1.1.0)
+
+Some cheap Brother mono lasers (e.g. **DCP-1610W**, HL-1210W, MFC-1910W) print from the phone only with the Brother app and
+have no AirPrint. For them set:
+
+```yaml
+printer_uri: socket://PRINTER-IP:9100
+driver: brlaser
+brother_model: DCP-1600   # part of the model name: DCP-1600 covers DCP-1610W/1612W
+```
+
+It uses the open source [brlaser](https://github.com/pdewacht/brlaser) driver. If the model is not found, the **Log** lists the
+available ones. Paper/toner alerts are not available in this mode.
+
 ### Options
 
 | Option | Default | Meaning |
 |---|---|---|
-| `printer_uri` | `ipp://192.168.1.100/ipp/print` | IPP address of the printer |
+| `printer_uri` | `ipp://192.168.1.100/ipp/print` | IPP address of the printer (`socket://IP:9100` with brlaser) |
+| `driver` | `driverless` | `driverless` (AirPrint / IPP Everywhere) or `brlaser` (Brother lasers without AirPrint) |
+| `brother_model` | `DCP-1600` | brlaser only: part of the model name |
 | `paper` | `A4` | A4, A5, Letter, Legal |
 | `duplex_default` | `false` | "Two-sided" switch starts on |
 | `keep_days` | `3` | uploaded files are deleted after N days |
@@ -108,6 +124,14 @@ Nella GIF in alto: popup della stampante → **CARICA FILE E STAMPA** → scelta
 6. Apri **Stampa** dal menu laterale, scegli un file e stampa. 🎉
 
 Nel **Registro** dell'add-on deve comparire `Queue RemotePrint ready`. Se la stampante non risponde prova `ipps://IP/ipp/print` oppure `ipp://IP/ipp`. Dai alla stampante un IP fisso nel router.
+
+### Laser Brother senza AirPrint (novità 1.1.0)
+Alcune Brother laser economiche (es. **DCP-1610W**, HL-1210W, MFC-1910W) stampano dal telefono solo con l'app Brother. Per queste, in **Configurazione**:
+- `printer_uri`: `socket://IP-STAMPANTE:9100`
+- `driver`: `brlaser`
+- `brother_model`: `DCP-1600` (parte del nome del modello; DCP-1600 va bene per DCP-1610W/1612W)
+
+Usa il driver libero [brlaser](https://github.com/pdewacht/brlaser). Se il modello non viene trovato, il Registro elenca quelli disponibili. In questa modalità non ci sono gli avvisi carta/toner.
 
 ### Card per la dashboard (facoltativa)
 - `examples/simple_button.yaml`: pulsante semplice che apre la pagina.
