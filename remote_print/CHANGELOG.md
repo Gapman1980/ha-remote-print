@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.4
+- With `driver: brlaser`, a `brother_model` that matches no driver now shows a clear message with the full list
+  of supported models (before only the last part of the list, inside "Printer not reachable"), without retrying.
+
 ## 1.1.3
 - `printer_uri` and `brother_model` tolerate common typing mistakes: the label typed in the field too
   (`printer_uri: socket://...`), quotes and spaces are removed (before: "Bad device-uri").

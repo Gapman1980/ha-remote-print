@@ -26,11 +26,15 @@ MSG = {
     "it": {"format": "Formato {} non supportato: usa PDF, foto o testo", "nofile": "Nessun file ricevuto",
            "heic": "Non riesco a convertire la foto HEIC", "offline": "Stampante non raggiungibile: è accesa? ",
            "noairprint": "Stampante non raggiungibile oppure senza AirPrint / IPP Everywhere. Controlla printer_uri; "
-                         "se è una Brother laser senza AirPrint usa driver: brlaser con printer_uri socket://IP:9100. "},
+                         "se è una Brother laser senza AirPrint usa driver: brlaser con printer_uri socket://IP:9100. ",
+           "model": "brother_model \"{}\" non trovato tra i driver brlaser. Scrivi nella Configurazione uno di questi "
+                    "(se il tuo non c'è, scegli uno della stessa serie): {}"},
     "en": {"format": "Format {} not supported: use PDF, photos or text", "nofile": "No file received",
            "heic": "Could not convert the HEIC photo", "offline": "Printer not reachable: is it on? ",
            "noairprint": "Printer not reachable or without AirPrint / IPP Everywhere. Check printer_uri; "
-                         "for a Brother laser without AirPrint use driver: brlaser with printer_uri socket://IP:9100. "},
+                         "for a Brother laser without AirPrint use driver: brlaser with printer_uri socket://IP:9100. ",
+           "model": "brother_model \"{}\" matches no brlaser driver. Put one of these in the Configuration "
+                    "(if yours is missing, pick one of the same series): {}"},
 }
 
 
@@ -46,6 +50,7 @@ PRINTER_URI = OPT.get("printer_uri", "")
 MEDIA = PAPER.get(OPT.get("paper", "A4"), "iso_a4_210x297mm")
 KEEP_DAYS = int(OPT.get("keep_days", 3))
 DRIVER = OPT.get("driver", "driverless")
+BROTHER_MODEL = re.sub(r"(?i)^\s*brother_?model\s*:\s*", "", str(OPT.get("brother_model", "DCP-1600"))).strip(" \"'")
 CONFIG_JS = json.dumps({"lang": OPT.get("language", "auto"), "paper": OPT.get("paper", "A4"),
                         "duplex": bool(OPT.get("duplex_default", False))})
 
@@ -69,6 +74,10 @@ async def ensure_queue():
     # run.sh already created the queue at start-up, so this only matters if the printer was off back then.
     for wait in (35, 15):   # printers in power-save mode sometimes answer slowly the first time
         rc, last = await run("/queue.sh", timeout=wait)   # driverless or brlaser, from the options
+        if rc == 2:   # brother_model matches no brlaser driver: retrying is pointless, list the models
+            models = [re.sub(r"^Brother |( series)?, using brlaser.*$", "", l.strip())
+                      for l in last.splitlines() if l.startswith("  ")]
+            return False, "model:" + ", ".join(models)
         if rc == 0:
             await run("cupsenable", QUEUE)
             await run("cupsaccept", QUEUE)
@@ -144,6 +153,8 @@ async def print_file(request):
         path = jpg
     ok, err = await ensure_queue()
     if not ok:
+        if err.startswith("model:"):
+            return web.json_response({"ok": False, "error": m["model"].format(BROTHER_MODEL, err[6:])})
         return web.json_response({"ok": False, "error": (m["offline"] if DRIVER == "brlaser" else m["noairprint"]) + err})
     copies = max(1, min(20, int(fields.get("copies", "1") or 1)))
     opts = ["-d", QUEUE, "-n", str(copies), "-t", name[:60], "-o", f"media={MEDIA}"]
