@@ -26,7 +26,7 @@ Upload a file from your phone — even when you are away from home — and your 
 
 ## Requirements
 
-- Home Assistant **OS** or **Supervised** (add-ons are needed).
+- Home Assistant **OS** or **Supervised** (apps / add-ons are needed; not available on HA Container/Docker or Core).
 - A network printer that supports **IPP / AirPrint** (almost every printer sold in the last 10 years: HP, Brother, Canon, Epson, Samsung, Kyocera…), **or** a Brother mono laser without AirPrint (see *Brother lasers* below). Give it a fixed IP address on your router.
 
 ## Installation
@@ -34,7 +34,11 @@ Upload a file from your phone — even when you are away from home — and your 
 **One tap:** [![Add repository to my Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FGapman1980%2Fha-remote-print)
 → confirm → search **Remote Print** in the store → Install. Or manually:
 
-1. Home Assistant → **Settings → Add-ons → Add-on store** → ⋮ (top right) → **Repositories**.
+> ⚠️ Remote Print is an **app** (formerly called *add-on*). Add it from the **App store**, **not from the Marketplace**:
+> the Marketplace only installs integrations and cards and answers *"…holds apps, the Marketplace does not install apps"*.
+
+1. Home Assistant → **Settings → Apps → App store** → ⋮ (top right) → **Repositories**
+   (older versions: **Settings → Add-ons → Add-on store**).
 2. Add: `https://github.com/Gapman1980/ha-remote-print` → **Add** → close.
 3. Find **Remote Print** in the store → **Install** (the first build takes a few minutes: it downloads CUPS).
 4. **Configuration** tab → set **printer_uri** (see below) → **Save**.
@@ -126,7 +130,12 @@ Nella GIF in alto: popup della stampante → **CARICA FILE E STAMPA** → scelta
 **Con un tocco:** [![Aggiungi il repository al mio Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FGapman1980%2Fha-remote-print)
 → conferma → cerca **Remote Print** nello Store → Installa. Oppure a mano:
 
-1. Home Assistant → **Impostazioni → Componenti aggiuntivi → Store** → ⋮ in alto a destra → **Repository**.
+> ⚠️ Remote Print è un'**app** (prima si chiamavano *componenti aggiuntivi / add-on*). Va aggiunta dallo **Store delle app**, **non dal Marketplace**:
+> il Marketplace installa solo integrazioni e card e risponde *"…holds apps, the Marketplace does not install apps"*.
+> Serve Home Assistant **OS** o **Supervised** (non Container/Docker).
+
+1. Home Assistant → **Impostazioni → App → Store delle app** → ⋮ in alto a destra → **Repository**
+   (versioni meno recenti: **Impostazioni → Componenti aggiuntivi → Store**).
 2. Aggiungi `https://github.com/Gapman1980/ha-remote-print` → **Aggiungi**.
 3. Cerca **Remote Print** → **Installa** (la prima volta ci mette qualche minuto).
 4. Scheda **Configurazione** → scrivi **printer_uri**, di solito `ipp://IP-STAMPANTE/ipp/print` → **Salva**.
