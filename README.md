@@ -65,6 +65,16 @@ brother_model: DCP-1600   # part of the model name: DCP-1600 covers DCP-1610W/16
 It uses the open source [brlaser](https://github.com/pdewacht/brlaser) driver. If the model is not found, the **Log** lists the
 available ones. Paper/toner alerts are not available in this mode.
 
+### Printers tested by users
+
+| Printer | `driver` | `printer_uri` | `brother_model` | Result |
+|---|---|---|---|---|
+| HP LaserJet MFP M234dw | `driverless` | `ipp://IP/ipp/print` | – | ✅ works |
+| Brother HL-1212W | `brlaser` | `socket://IP:9100` | `HL-1200` | ✅ works |
+| Brother DCP-1612W | `brlaser` | `socket://IP:9100` | `DCP-1600` | ✅ works |
+
+Tried another printer? Tell us in an [issue](https://github.com/Gapman1980/ha-remote-print/issues) (model + settings) and it will be added here.
+
 ### Options
 
 | Option | Default | Meaning |
@@ -151,6 +161,16 @@ Alcune Brother laser economiche (es. **DCP-1610W**, HL-1210W, MFC-1910W) stampan
 - `brother_model`: `DCP-1600` (parte del nome del modello; DCP-1600 va bene per DCP-1610W/1612W)
 
 Usa il driver libero [brlaser](https://github.com/pdewacht/brlaser). Se il modello non viene trovato, il Registro elenca quelli disponibili. In questa modalità non ci sono gli avvisi carta/toner.
+
+### Stampanti provate dagli utenti
+
+| Stampante | `driver` | `printer_uri` | `brother_model` | Esito |
+|---|---|---|---|---|
+| HP LaserJet MFP M234dw | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona |
+| Brother HL-1212W | `brlaser` | `socket://IP:9100` | `HL-1200` | ✅ funziona |
+| Brother DCP-1612W | `brlaser` | `socket://IP:9100` | `DCP-1600` | ✅ funziona |
+
+Hai provato un'altra stampante? Scrivilo in una [issue](https://github.com/Gapman1980/ha-remote-print/issues) (modello + impostazioni) e la aggiungiamo.
 
 ### Card per la dashboard (facoltativa)
 - `examples/simple_button.yaml`: pulsante semplice che apre la pagina.
