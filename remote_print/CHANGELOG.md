@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0
+- **URF (AirPrint raster) printers get the same header macOS sends** ([#2](https://github.com/Gapman1980/ha-remote-print/issues/2)): CUPS writes
+  page count 0 ("unknown") and a one-sided flag of 1, Apple writes the real number of pages and 0. Some printers
+  (e.g. Samsung M2070) fed blank or garbage sheets with the CUPS header. A small filter (`urffix`) now rewrites only
+  those bytes; the image data is untouched and anything unexpected is sent unchanged. Thanks @Danyasr for finding it.
+
 ## 1.5.2
 - The yellow alert box no longer shows CUPS' own internal messages (e.g. `cups-waiting-for-job-completed`, which appeared
   during every print on some printers and vanished at the end, [#7](https://github.com/Gapman1980/ha-remote-print/issues/7)). Real printer alerts (paper, toner, door ...) are shown as before.

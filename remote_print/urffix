@@ -1,0 +1,95 @@
+#!/usr/bin/python3
+"""Remote Print 1.6.0 - CUPS filter for URF (Apple raster) printers.
+
+CUPS writes URF that is valid but differs from what macOS / iOS send:
+  - file header page count = 0 ("unknown", streaming) instead of the real number of pages;
+  - page header duplex byte = 1 for one-sided pages, where Apple writes 0.
+Some printers (e.g. Samsung M2070, #2) misread this and feed blank / garbage sheets.
+This filter rewrites only those bytes so the stream matches Apple's; the image data is untouched.
+If anything looks unexpected the job is passed through unchanged.
+Usage (CUPS filter): urffix job user title copies options [file]
+"""
+import struct
+import sys
+
+MAX = 400 * 1024 * 1024   # bigger jobs are passed through unchanged (memory)
+
+
+def log(level, text):
+    sys.stderr.write(f"{level}: urffix: {text}\n")
+    sys.stderr.flush()
+
+
+def scan(data):
+    """-> list of page header offsets, or raises ValueError if the stream is not what we expect."""
+    if data[:8] != b"UNIRAST\0" or len(data) < 12:
+        raise ValueError("not an URF stream")
+    pages, pos, n = [], 12, len(data)
+    while pos < n:
+        if pos + 32 > n:
+            raise ValueError("truncated page header")
+        bpp = data[pos]
+        w, h = struct.unpack(">II", data[pos + 12:pos + 20])
+        if bpp % 8 or not bpp or not w or not h:
+            raise ValueError(f"odd page header (bpp {bpp}, {w}x{h})")
+        bp = bpp // 8
+        pages.append(pos)
+        pos += 32
+        y = 0
+        while y < h:
+            rep = data[pos]          # line repeat count: this line is used rep + 1 times
+            pos += 1
+            x = 0
+            while x < w:
+                c = data[pos]
+                pos += 1
+                if c == 0x80:        # rest of the line is white
+                    x = w
+                elif c < 0x80:       # next pixel repeated c + 1 times
+                    pos += bp
+                    x += c + 1
+                else:                # 257 - c literal pixels
+                    k = 257 - c
+                    pos += k * bp
+                    x += k
+            if x != w or pos > n:
+                raise ValueError("line overrun")
+            y += rep + 1
+    if pos != n:
+        raise ValueError("trailing bytes")
+    return pages
+
+
+def main():
+    src = open(sys.argv[6], "rb") if len(sys.argv) > 6 else sys.stdin.buffer
+    data = src.read(MAX + 1)
+    out = sys.stdout.buffer
+    if len(data) > MAX:
+        log("INFO", "large job, sent unchanged")
+        out.write(data)
+        while True:
+            chunk = src.read(1 << 20)
+            if not chunk:
+                break
+            out.write(chunk)
+        return
+    try:
+        pages = scan(data)
+    except (ValueError, IndexError, struct.error) as e:
+        log("WARNING", f"{e}: job sent unchanged")
+        out.write(data)
+        return
+    buf = bytearray(data)
+    old = struct.unpack(">I", buf[8:12])[0]
+    buf[8:12] = struct.pack(">I", len(pages))
+    dup = 0
+    for p in pages:
+        if buf[p + 2] == 1:          # one-sided: Apple writes 0
+            buf[p + 2] = 0
+            dup += 1
+    log("INFO", f"{len(pages)} page(s): page count {old} -> {len(pages)}, one-sided flag fixed on {dup} page(s)")
+    out.write(buf)
+
+
+if __name__ == "__main__":
+    main()

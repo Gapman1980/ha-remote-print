@@ -51,5 +51,12 @@ if [ -f "$PPDF" ] && grep -q 'cupsFilter2: "image/urf' "$PPDF"; then
     sed -i -E 's/cupsBitsPerColor (1|2|4)([^0-9])/cupsBitsPerColor 8\2/g; s/cupsColorSpace (3|0)([^0-9])/cupsColorSpace 18\2/g' "$PPDF"
     echo "[$Q] URF printer: colour model forced to 8-bit (sGray/sRGB)"
   fi
+  # 1.6.0: CUPS writes URF with page count 0 and duplex flag 1 for one-sided pages, macOS writes the real count and 0.
+  # Some printers (Samsung M2070, #2) feed blank sheets with the CUPS header: /usr/lib/cups/filter/urffix rewrites it.
+  if grep -qE '^\*cupsFilter2: "image/urf image/urf [0-9]+ -"' "$PPDF"; then
+    sed -E 's|^(\*cupsFilter2: "image/urf image/urf [0-9]+) -"|\1 urffix"|' "$PPDF" > /tmp/$Q.ppd
+    lpadmin -p "$Q" -P /tmp/$Q.ppd && echo "[$Q] URF printer: header written like macOS (page count, one-sided flag)"
+    rm -f /tmp/$Q.ppd
+  fi
 fi
 exit 0
