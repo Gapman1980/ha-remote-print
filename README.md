@@ -80,6 +80,7 @@ Something wrong? [Open a problem report](https://github.com/Gapman1980/ha-remote
 | Epson Expression Premium XP-960 (ink) | `driverless` | `ipp://IP/ipp/print` | – | ✅ works |
 | Konica Minolta bizhub C3350i | `driverless` | `ipp://IP/ipp/print` | – | ✅ works (turn off the printer's **IP filter** or allow Home Assistant's IP, [#7](https://github.com/Gapman1980/ha-remote-print/issues/7)) |
 | Brother DCP-L3550CDW (colour laser) | `driverless` | `ipp://IP/ipp/print` | – | ✅ works ([#8](https://github.com/Gapman1980/ha-remote-print/issues/8)) |
+| Samsung M2070 Series (mono laser) | `driverless` | `ipp://IP/ipp/print` | – | ✅ works from **v1.6.0** (URF header fix, [#2](https://github.com/Gapman1980/ha-remote-print/issues/2)) |
 
 Tried another printer? Tell us in an [issue](https://github.com/Gapman1980/ha-remote-print/issues) (model + settings) and it will be added here.
 
@@ -253,6 +254,7 @@ Qualcosa non va? [Apri una segnalazione](https://github.com/Gapman1980/ha-remote
 | Epson Expression Premium XP-960 (inkjet) | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona |
 | Konica Minolta bizhub C3350i | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona (disattiva il **filtro IP** della stampante o permetti l'IP di Home Assistant, [#7](https://github.com/Gapman1980/ha-remote-print/issues/7)) |
 | Brother DCP-L3550CDW (laser a colori) | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona ([#8](https://github.com/Gapman1980/ha-remote-print/issues/8)) |
+| Samsung M2070 Series (laser b/n) | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona dalla **v1.6.0** (correzione intestazione URF, [#2](https://github.com/Gapman1980/ha-remote-print/issues/2)) |
 
 Hai provato un'altra stampante? Scrivilo in una [issue](https://github.com/Gapman1980/ha-remote-print/issues) (modello + impostazioni) e la aggiungiamo.
 
