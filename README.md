@@ -78,6 +78,7 @@ Something wrong? [Open a problem report](https://github.com/Gapman1980/ha-remote
 | Pantum (laser) | `driverless` | `ipp://IP/ipp` | – | ✅ works |
 | Canon GX2000 series (GX2051, ink) | `driverless` | `ipp://IP/ipp/print` | – | ✅ works ([#1](https://github.com/Gapman1980/ha-remote-print/issues/1)) |
 | Epson Expression Premium XP-960 (ink) | `driverless` | `ipp://IP/ipp/print` | – | ✅ works |
+| Konica Minolta bizhub C3350i | `driverless` | `ipp://IP/ipp/print` | – | ✅ works (turn off the printer's **IP filter** or allow Home Assistant's IP, [#7](https://github.com/Gapman1980/ha-remote-print/issues/7)) |
 
 Tried another printer? Tell us in an [issue](https://github.com/Gapman1980/ha-remote-print/issues) (model + settings) and it will be added here.
 
@@ -249,6 +250,7 @@ Qualcosa non va? [Apri una segnalazione](https://github.com/Gapman1980/ha-remote
 | Pantum (laser) | `driverless` | `ipp://IP/ipp` | – | ✅ funziona |
 | Canon GX2000 series (GX2051, inkjet) | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona ([#1](https://github.com/Gapman1980/ha-remote-print/issues/1)) |
 | Epson Expression Premium XP-960 (inkjet) | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona |
+| Konica Minolta bizhub C3350i | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona (disattiva il **filtro IP** della stampante o permetti l'IP di Home Assistant, [#7](https://github.com/Gapman1980/ha-remote-print/issues/7)) |
 
 Hai provato un'altra stampante? Scrivilo in una [issue](https://github.com/Gapman1980/ha-remote-print/issues) (modello + impostazioni) e la aggiungiamo.
 
