@@ -1,4 +1,10 @@
 configuration:
+  printer_name:
+    name: Printer name (optional)
+    description: "Name of the main printer shown on the page when you have more than one printer (e.g. HP Office). Empty = its IP address."
+  other_printers:
+    name: Other printers (optional)
+    description: "Extra printers to choose from on the page. Each one: name, printer_uri, driver (driverless or brlaser), brother_model (brlaser only). Easiest with ⋮ → Edit in YAML, see Documentation."
   printer_uri:
     name: Printer URI
     description: "IPP address of your printer, e.g. ipp://192.168.1.100/ipp/print (most AirPrint printers). Some use ipps:// or /ipp instead of /ipp/print."

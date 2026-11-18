@@ -18,8 +18,25 @@ Upload a file from your phone (even away from home) and your network printer pri
 - **duplex_default**: the "two-sided" switch starts on.
 - **keep_days**: uploaded files are deleted after this many days.
 - **language**: `auto` (phone language), `en` or `it`.
+- **printer_name** (optional): name of the main printer on the page when you have more than one.
+- **other_printers** (optional): more printers to choose from on the page. Easiest with **⋮ → Edit in YAML**:
 
-After saving, start the add-on and turn on **Show in sidebar**. The log must say `Queue RemotePrint ready`.
+```yaml
+printer_name: HP Office
+printer_uri: ipp://192.168.1.60/ipp/print
+driver: driverless
+other_printers:
+  - name: Brother
+    printer_uri: socket://192.168.1.70:9100
+    driver: brlaser
+    brother_model: HL-1200
+```
+
+The main printer is the default; with two or more printers the page shows a selector (the choice is remembered on each phone),
+alerts refer to the printer selected and the job list shows where each job went.
+
+After saving, start the add-on and turn on **Show in sidebar**. The log must say `[RemotePrint] Queue ready`
+(one line per printer: `RemotePrint2`, `RemotePrint3` ...).
 
 ## Use
 

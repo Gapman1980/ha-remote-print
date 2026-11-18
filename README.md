@@ -92,6 +92,26 @@ Tried another printer? Tell us in an [issue](https://github.com/Gapman1980/ha-re
 | `keep_days` | `3` | uploaded files are deleted after N days |
 | `language` | `auto` | `auto` (phone language), `en`, `it` |
 | `lan_access` | `false` | also open the page directly from the local network (see below) |
+| `printer_name` | – | optional: name of the main printer on the page |
+| `other_printers` | `[]` | optional: more printers to choose from on the page (see below) |
+
+### More printers (new in 1.3.0)
+
+**Configuration → ⋮ → Edit in YAML**, keep your printer and add the others:
+
+```yaml
+printer_name: HP Office
+printer_uri: ipp://192.168.1.60/ipp/print
+driver: driverless
+other_printers:
+  - name: Brother
+    printer_uri: socket://192.168.1.70:9100
+    driver: brlaser
+    brother_model: HL-1200
+```
+
+Restart the add-on: the page shows a printer selector (remembered on each phone), paper/toner alerts follow the selected
+printer and the job list shows where each job went. The first printer is the default.
 
 ## Dashboard (optional)
 
@@ -176,6 +196,23 @@ Alcune Brother laser economiche (es. **DCP-1610W**, HL-1210W, MFC-1910W) stampan
 - `brother_model`: `DCP-1600` (parte del nome del modello; DCP-1600 va bene per DCP-1610W/1612W)
 
 Usa il driver libero [brlaser](https://github.com/pdewacht/brlaser). Se il modello non viene trovato, il Registro elenca quelli disponibili. In questa modalità non ci sono gli avvisi carta/toner.
+
+### Più stampanti (novità 1.3.0)
+**Configurazione → ⋮ → Modifica in YAML**, lascia la tua stampante e aggiungi le altre:
+
+```yaml
+printer_name: HP Ufficio
+printer_uri: ipp://192.168.1.60/ipp/print
+driver: driverless
+other_printers:
+  - name: Brother
+    printer_uri: socket://192.168.1.70:9100
+    driver: brlaser
+    brother_model: HL-1200
+```
+
+Riavvia l'add-on: nella pagina compare la scelta della stampante (ricordata su ogni telefono), gli avvisi carta/toner sono
+quelli della stampante scelta e nella lista si vede dove è andata ogni stampa. La prima è quella predefinita.
 
 ### Stampanti provate dagli utenti
 

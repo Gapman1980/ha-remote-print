@@ -1,4 +1,10 @@
 configuration:
+  printer_name:
+    name: Nome stampante (facoltativo)
+    description: "Nome della stampante principale mostrato nella pagina quando ne hai più di una (es. HP Ufficio). Vuoto = il suo indirizzo IP."
+  other_printers:
+    name: Altre stampanti (facoltativo)
+    description: "Stampanti in più da scegliere nella pagina. Per ognuna: name, printer_uri, driver (driverless o brlaser), brother_model (solo brlaser). Più comodo da ⋮ → Modifica in YAML, vedi Documentazione."
   printer_uri:
     name: Indirizzo stampante
     description: "Indirizzo IPP della stampante, es. ipp://192.168.1.100/ipp/print (quasi tutte le stampanti AirPrint). Alcune usano ipps:// oppure /ipp al posto di /ipp/print."

@@ -47,14 +47,36 @@ def options():
 
 
 OPT = options()
-PRINTER_URI = OPT.get("printer_uri", "")
 MEDIA = PAPER.get(OPT.get("paper", "A4"), "iso_a4_210x297mm")
 KEEP_DAYS = int(OPT.get("keep_days", 3))
-DRIVER = OPT.get("driver", "driverless")
-BROTHER_MODEL = re.sub(r"(?i)^\s*brother_?model\s*:\s*", "", str(OPT.get("brother_model", "DCP-1600"))).strip(" \"'")
 LAN_ACCESS = bool(OPT.get("lan_access", False))   # direct access on the add-on port (Network section), local network only
+
+
+def clean_model(v):
+    return re.sub(r"(?i)^\s*brother_?model\s*:\s*", "", str(v or "DCP-1600")).strip(" \"'")
+
+
+def host_of(uri):
+    m = re.search(r"://([^/:]+)", str(uri or ""))
+    return m.group(1) if m else ""
+
+
+# 1.3.0: main printer (top-level options, queue RemotePrint) + optional other_printers (queues RemotePrint2, 3 ...)
+PRINTERS = [{"queue": "RemotePrint", "name": (OPT.get("printer_name") or "").strip() or host_of(OPT.get("printer_uri")) or "Printer",
+             "driver": OPT.get("driver", "driverless"), "model": clean_model(OPT.get("brother_model"))}]
+for i, p in enumerate(OPT.get("other_printers") or [], start=2):
+    PRINTERS.append({"queue": f"RemotePrint{i}", "name": (p.get("name") or "").strip() or host_of(p.get("printer_uri")) or f"Printer {i}",
+                     "driver": p.get("driver", "driverless"), "model": clean_model(p.get("brother_model"))})
+QUEUE_RE = r"(RemotePrint\d*)-(\d+)"
 CONFIG_JS = json.dumps({"lang": OPT.get("language", "auto"), "paper": OPT.get("paper", "A4"),
-                        "duplex": bool(OPT.get("duplex_default", False))})
+                        "duplex": bool(OPT.get("duplex_default", False)), "printers": [p["name"] for p in PRINTERS]})
+
+
+def printer(i):
+    try:
+        return int(i), PRINTERS[int(i)]
+    except (ValueError, TypeError, IndexError):
+        return 0, PRINTERS[0]
 
 
 async def run(*cmd, timeout=60):
@@ -67,22 +89,23 @@ async def run(*cmd, timeout=60):
     return p.returncode, out.decode(errors="replace")
 
 
-async def ensure_queue():
-    rc, _ = await run("lpstat", "-p", QUEUE)
+async def ensure_queue(idx):
+    q = PRINTERS[idx]["queue"]
+    rc, _ = await run("lpstat", "-p", q)
     if rc == 0:
         return True, ""
     last = ""
     # Keep the whole wait short: the upload request is still open and remote proxies drop it after ~1 minute.
     # run.sh already created the queue at start-up, so this only matters if the printer was off back then.
     for wait in (35, 15):   # printers in power-save mode sometimes answer slowly the first time
-        rc, last = await run("/queue.sh", timeout=wait)   # driverless or brlaser, from the options
+        rc, last = await run("/queue.sh", str(idx), timeout=wait)   # driverless or brlaser, from the options
         if rc == 2:   # brother_model matches no brlaser driver: retrying is pointless, list the models
             models = [re.sub(r"^Brother |( series)?, using brlaser.*$", "", l.strip())
                       for l in last.splitlines() if l.startswith("  ")]
             return False, "model:" + ", ".join(models)
         if rc == 0:
-            await run("cupsenable", QUEUE)
-            await run("cupsaccept", QUEUE)
+            await run("cupsenable", q)
+            await run("cupsaccept", q)
             return True, ""
         await asyncio.sleep(2)
     return False, last.strip()[-200:]
@@ -193,47 +216,51 @@ async def print_file(request):
             path = await asyncio.to_thread(image_to_pdf, path)
         except Exception as e:   # keep the original photo: the printer may still manage it
             print(f"Photo -> PDF failed, sending the original: {e}", flush=True)
-    ok, err = await ensure_queue()
+    idx, pr = printer(fields.get("printer", "0"))
+    ok, err = await ensure_queue(idx)
     if not ok:
+        tag = f"[{pr['name']}] " if len(PRINTERS) > 1 else ""
         if err.startswith("model:"):
-            return web.json_response({"ok": False, "error": m["model"].format(BROTHER_MODEL, err[6:])})
-        return web.json_response({"ok": False, "error": (m["offline"] if DRIVER == "brlaser" else m["noairprint"]) + err})
+            return web.json_response({"ok": False, "error": tag + m["model"].format(pr["model"], err[6:])})
+        return web.json_response({"ok": False, "error": tag + (m["offline"] if pr["driver"] == "brlaser" else m["noairprint"]) + err})
     copies = max(1, min(20, int(fields.get("copies", "1") or 1)))
-    opts = ["-d", QUEUE, "-n", str(copies), "-t", name[:60], "-o", f"media={MEDIA}"]
+    opts = ["-d", pr["queue"], "-n", str(copies), "-t", name[:60], "-o", f"media={MEDIA}"]
     opts += ["-o", "sides=two-sided-long-edge" if fields.get("duplex") == "1" else "sides=one-sided"]
     if fields.get("fit", "1") == "1":
         opts += ["-o", "fit-to-page"]
     if fields.get("pages") and re.fullmatch(r"[0-9,\- ]+", fields["pages"]):
         opts += ["-o", "page-ranges=" + fields["pages"].replace(" ", "")]
     rc, out = await run("lp", *opts, path)
-    job = re.search(rf"{QUEUE}-(\d+)", out)
+    job = re.search(QUEUE_RE, out)
     if rc != 0 or not job:
         return web.json_response({"ok": False, "error": "CUPS: " + out.strip()[-200:]})
+    jid = int(job.group(2))   # CUPS job numbers are unique across all queues
     jobs_ = read_jobs()
     # CUPS restarts job numbers from 1 after an add-on restart/update: close older jobs with the same number
     for j in jobs_:
-        if j["id"] == int(job.group(1)):
+        if j["id"] == jid:
             j["closed"] = True
-    jobs_.append({"id": int(job.group(1)), "name": name, "copies": copies, "time": time.time(), "canceled": False})
+    jobs_.append({"id": jid, "name": name, "copies": copies, "time": time.time(), "canceled": False, "printer": pr["name"]})
     write_jobs(jobs_)
-    return web.json_response({"ok": True, "id": int(job.group(1))})
+    return web.json_response({"ok": True, "id": jid})
 
 
 async def jobs(request):
-    _, open_ = await run("lpstat", "-W", "not-completed", "-o", QUEUE)
-    _, done = await run("lpstat", "-W", "completed", "-o", QUEUE)
-    rc, state = await run("lpstat", "-l", "-p", QUEUE)
-    op = {int(x) for x in re.findall(rf"^{QUEUE}-(\d+)", open_, re.M)}
-    dn = {int(x) for x in re.findall(rf"^{QUEUE}-(\d+)", done, re.M)}
-    now = re.search(rf"now printing {QUEUE}-(\d+)", state)
-    now = int(now.group(1)) if now else None
+    _, pr = printer(request.query.get("printer", "0"))
+    _, open_ = await run("lpstat", "-W", "not-completed", "-o")
+    _, done = await run("lpstat", "-W", "completed", "-o")
+    _, every = await run("lpstat", "-p")
+    rc, state = await run("lpstat", "-l", "-p", pr["queue"])   # alerts of the printer chosen on the page
+    op = {int(x[1]) for x in re.findall(rf"^{QUEUE_RE}", open_, re.M)}
+    dn = {int(x[1]) for x in re.findall(rf"^{QUEUE_RE}", done, re.M)}
+    now = {int(x[1]) for x in re.findall(rf"now printing {QUEUE_RE}", every)}
     out = []
     for j in reversed(read_jobs()[-15:]):
         if j.get("canceled"):
             s = "canceled"
         elif j.get("closed") or time.time() - j["time"] > 6 * 3600:
             s = "done"
-        elif j["id"] == now:
+        elif j["id"] in now:
             s = "printing"
         elif j["id"] in op:
             s = "queued"
@@ -249,7 +276,7 @@ async def jobs(request):
 
 async def cancel(request):
     jid = int(request.query.get("id", "0"))
-    await run("cancel", f"{QUEUE}-{jid}")
+    await run("cancel", str(jid))   # job number alone: works for every queue
     jobs_ = read_jobs()
     for j in jobs_:
         if j["id"] == jid:

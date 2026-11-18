@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+- **More printers** ([#4](https://github.com/Gapman1980/ha-remote-print/issues/4)): new optional `other_printers` list
+  (name, printer_uri, driver, brother_model) and `printer_name` for the main printer. With two or more printers the page
+  shows a printer selector (remembered on each phone); alerts follow the selected printer and the job list shows where
+  each job went. One CUPS queue per printer (`RemotePrint`, `RemotePrint2` ...). Existing single-printer setups work unchanged.
+
 ## 1.2.0
 - Fix for printers that only accept URF / Apple raster (e.g. Samsung M2070, #2): if the generated driver used a
   1-bit black colour model, pages were sent as 1-bit URF and the printer printed random characters and blank sheets.
