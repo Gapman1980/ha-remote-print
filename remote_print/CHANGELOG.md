@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0
+- **Print preview with scale and position** ([#5](https://github.com/Gapman1980/ha-remote-print/issues/5)): after choosing a
+  file, tap **Preview and position** to see the sheet with the printer's printable border and your page on it.
+  Portrait / landscape, scale slider (5–300 %), **Fit**, **Center**, **100 %**, drag with a finger to move it, page arrows
+  for multi-page PDFs. The add-on builds a PDF with exactly that layout and prints it without extra scaling, so the print
+  matches the preview. Adjustments apply to all pages. Without opening the preview, printing works as before.
+
 ## 1.3.0
 - **More printers** ([#4](https://github.com/Gapman1980/ha-remote-print/issues/4)): new optional `other_printers` list
   (name, printer_uri, driver, brother_model) and `printer_name` for the main printer. With two or more printers the page

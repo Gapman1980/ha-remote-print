@@ -24,13 +24,15 @@ MIME_EXT = {"application/pdf": ".pdf", "image/jpeg": ".jpg", "image/png": ".png"
 PAPER = {"A4": "iso_a4_210x297mm", "A5": "iso_a5_148x210mm", "Letter": "na_letter_8.5x11in", "Legal": "na_legal_8.5x14in"}
 
 MSG = {
-    "it": {"format": "Formato {} non supportato: usa PDF, foto o testo", "nofile": "Nessun file ricevuto",
+    "it": {"nopreview": "Anteprima non disponibile per questo file: puoi comunque stamparlo normalmente",
+           "format": "Formato {} non supportato: usa PDF, foto o testo", "nofile": "Nessun file ricevuto",
            "heic": "Non riesco a convertire la foto HEIC", "offline": "Stampante non raggiungibile: è accesa? ",
            "noairprint": "Stampante non raggiungibile oppure senza AirPrint / IPP Everywhere. Controlla printer_uri; "
                          "se è una Brother laser senza AirPrint usa driver: brlaser con printer_uri socket://IP:9100. ",
            "model": "brother_model \"{}\" non trovato tra i driver brlaser. Scrivi nella Configurazione uno di questi "
                     "(se il tuo non c'è, scegli uno della stessa serie): {}"},
-    "en": {"format": "Format {} not supported: use PDF, photos or text", "nofile": "No file received",
+    "en": {"nopreview": "Preview not available for this file: you can still print it normally",
+           "format": "Format {} not supported: use PDF, photos or text", "nofile": "No file received",
            "heic": "Could not convert the HEIC photo", "offline": "Printer not reachable: is it on? ",
            "noairprint": "Printer not reachable or without AirPrint / IPP Everywhere. Check printer_uri; "
                          "for a Brother laser without AirPrint use driver: brlaser with printer_uri socket://IP:9100. ",
@@ -177,8 +179,8 @@ async def page(request):
     return web.Response(text=html, content_type="text/html", headers={"Cache-Control": "no-store"})
 
 
-async def print_file(request):
-    cleanup_uploads()
+async def read_upload(request):
+    """multipart form -> (fields, original name, saved path, unsupported extension or None)."""
     reader = await request.multipart()
     fields, name, path = {}, None, None
     async for part in reader:
@@ -190,10 +192,9 @@ async def print_file(request):
                 if ext in EXTENSIONS:
                     name = (os.path.splitext(name)[0] or "file") + ext
             if ext not in EXTENSIONS:
-                lang = fields.get("lang") if fields.get("lang") in MSG else "en"
-                return web.json_response({"ok": False, "error": MSG[lang]["format"].format(ext or "?")})
+                return fields, name, None, ext or "?"
             safe = re.sub(r"[^A-Za-z0-9._-]+", "_", name)[-80:]
-            path = os.path.join(UPLOADS, f"{int(time.time())}_{safe}")
+            path = os.path.join(UPLOADS, f"{int(time.time() * 1000)}_{safe}")
             with open(path, "wb") as f:
                 while True:
                     chunk = await part.read_chunk(1 << 16)
@@ -202,20 +203,182 @@ async def print_file(request):
                     f.write(chunk)
         else:
             fields[part.name] = (await part.text()).strip()
-    m = MSG[fields.get("lang") if fields.get("lang") in MSG else "en"]
-    if not path:
-        return web.json_response({"ok": False, "error": m["nofile"]})
+    return fields, name, path, None
+
+
+def lang_msg(fields):
+    return MSG[fields.get("lang") if fields.get("lang") in MSG else "en"]
+
+
+async def convert(path, m):
+    """HEIC -> JPG, photos -> PDF. Returns (path, error)."""
     if path.lower().endswith((".heic", ".heif")):          # iPhone photos -> JPG
         jpg = path.rsplit(".", 1)[0] + ".jpg"
         rc, _ = await run("heif-convert", path, jpg)
         if rc != 0:
-            return web.json_response({"ok": False, "error": m["heic"]})
+            return path, m["heic"]
         path = jpg
     if path.lower().endswith(IMAGES):
         try:
             path = await asyncio.to_thread(image_to_pdf, path)
         except Exception as e:   # keep the original photo: the printer may still manage it
             print(f"Photo -> PDF failed, sending the original: {e}", flush=True)
+    return path, None
+
+
+# ---------- 1.4.0: print preview with scaling / position (#5) ----------
+PAPER_PT = {"A4": (595.28, 841.89), "A5": (419.53, 595.28), "Letter": (612.0, 792.0), "Legal": (612.0, 1008.0)}
+PAPER_NAME = OPT.get("paper", "A4") if OPT.get("paper", "A4") in PAPER_PT else "A4"
+TOKEN_RE = re.compile(r"^\d+_[A-Za-z0-9._-]+\.pdf$")
+
+
+def token_path(token):
+    token = os.path.basename(str(token or ""))
+    p = os.path.join(UPLOADS, token)
+    return p if TOKEN_RE.match(token) and os.path.isfile(p) else None
+
+
+def paper_info(queue):
+    """Paper size (points, portrait) and the printer's unprintable margins read from its PPD (*ImageableArea)."""
+    W, H = PAPER_PT[PAPER_NAME]
+    mg = {"l": 12.0, "b": 12.0, "r": 12.0, "t": 12.0}
+    try:
+        txt = open(f"/etc/cups/ppd/{queue}.ppd", errors="replace").read()
+        a = re.search(rf'^\*ImageableArea {re.escape(PAPER_NAME)}[/:][^"\n]*"\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)', txt, re.M)
+        if a:
+            l, b, r, t = map(float, a.groups())
+            mg = {"l": l, "b": b, "r": max(W - r, 0), "t": max(H - t, 0)}
+    except Exception:
+        pass
+    return {"paper": [W, H], "margins": mg, "name": PAPER_NAME}
+
+
+def pdf_info(path):
+    from pypdf import PdfReader
+    r = PdfReader(path)
+    sizes = []
+    for p in r.pages[:300]:
+        w, h = float(p.mediabox.width), float(p.mediabox.height)
+        if int(p.get("/Rotate", 0) or 0) % 180 == 90:
+            w, h = h, w
+        sizes.append([round(w, 2), round(h, 2)])
+    return len(r.pages), sizes
+
+
+def apply_layout(path, lay):
+    """Every page on a new sheet: scale s, centre moved by (dx, dy) points from the sheet centre (y up), orientation p/l."""
+    from pypdf import PdfReader, PdfWriter, PageObject, Transformation
+    W, H = PAPER_PT[PAPER_NAME]
+    if lay.get("o") == "l":
+        W, H = H, W
+    s = min(max(float(lay.get("s", 1)), 0.05), 5.0)
+    dx = min(max(float(lay.get("dx", 0)), -3000), 3000)
+    dy = min(max(float(lay.get("dy", 0)), -3000), 3000)
+    reader, writer = PdfReader(path), PdfWriter()
+    for p in reader.pages:
+        try:
+            p.transfer_rotation_to_content()
+        except Exception:
+            pass
+        x0, y0 = float(p.mediabox.left), float(p.mediabox.bottom)
+        pw, ph = float(p.mediabox.width), float(p.mediabox.height)
+        t = Transformation().translate(-x0, -y0).scale(s, s).translate(W / 2 + dx - s * pw / 2, H / 2 + dy - s * ph / 2)
+        sheet = PageObject.create_blank_page(width=W, height=H)
+        sheet.merge_transformed_page(p, t)
+        writer.add_page(sheet)
+    out = path[:-4] + f"_lay{int(time.time())}.pdf"
+    with open(out, "wb") as f:
+        writer.write(f)
+    return out
+
+
+async def to_pdf_text(path):
+    """Plain text -> PDF with the CUPS text filter (for the preview)."""
+    out = path.rsplit(".", 1)[0] + ".pdf"
+    p = await asyncio.create_subprocess_exec("cupsfilter", "-m", "application/pdf", path,
+                                             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
+    try:
+        data, _ = await asyncio.wait_for(p.communicate(), 60)
+    except asyncio.TimeoutError:
+        p.kill()
+        return None
+    if p.returncode != 0 or not data.startswith(b"%PDF"):
+        return None
+    open(out, "wb").write(data)
+    return out
+
+
+async def prepare(request):
+    """Upload once for the preview: returns a token (the PDF kept on the add-on), pages and page sizes."""
+    cleanup_uploads()
+    fields, name, path, bad = await read_upload(request)
+    m = lang_msg(fields)
+    if bad:
+        return web.json_response({"ok": False, "error": m["format"].format(bad)})
+    if not path:
+        return web.json_response({"ok": False, "error": m["nofile"]})
+    path, err = await convert(path, m)
+    if err:
+        return web.json_response({"ok": False, "error": err})
+    if path.lower().endswith(".txt"):
+        path = await to_pdf_text(path)
+    if not path or not path.lower().endswith(".pdf"):
+        return web.json_response({"ok": False, "error": m["nopreview"]})
+    try:
+        pages, sizes = await asyncio.to_thread(pdf_info, path)
+    except Exception as e:
+        print(f"Preview: cannot read PDF: {e}", flush=True)
+        return web.json_response({"ok": False, "error": m["nopreview"]})
+    return web.json_response({"ok": True, "token": os.path.basename(path), "name": name, "pages": pages, "sizes": sizes})
+
+
+async def preview(request):
+    """PNG of one page (Ghostscript), cached next to the PDF."""
+    path = token_path(request.query.get("token"))
+    if not path:
+        return web.Response(status=404, text="no file")
+    try:
+        n = max(1, int(request.query.get("page", "1")))
+        r = min(max(int(float(request.query.get("r", "60"))), 15), 150)
+    except ValueError:
+        return web.Response(status=400, text="bad request")
+    png = path[:-4] + f"_p{n}_r{r}.png"
+    if not os.path.isfile(png):
+        rc, out = await run("gs", "-q", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=png16m", f"-r{r}",
+                            "-dTextAlphaBits=4", "-dGraphicsAlphaBits=4", f"-dFirstPage={n}", f"-dLastPage={n}",
+                            f"-sOutputFile={png}", path, timeout=60)
+        if rc != 0 or not os.path.isfile(png):
+            return web.Response(status=500, text="preview failed")
+    return web.FileResponse(png, headers={"Cache-Control": "no-store"})
+
+
+async def paper(request):
+    _, pr = printer(request.query.get("printer", "0"))
+    return web.json_response(paper_info(pr["queue"]))
+
+
+async def print_file(request):
+    cleanup_uploads()
+    fields, name, path, bad = await read_upload(request)
+    m = lang_msg(fields)
+    if bad:
+        return web.json_response({"ok": False, "error": m["format"].format(bad)})
+    if not path and fields.get("token"):   # already uploaded for the preview
+        path = token_path(fields["token"])
+        name = (fields.get("name") or "file.pdf")[:120]
+    if not path:
+        return web.json_response({"ok": False, "error": m["nofile"]})
+    path, err = await convert(path, m)
+    if err:
+        return web.json_response({"ok": False, "error": err})
+    lay = None
+    if fields.get("layout") and path.lower().endswith(".pdf"):
+        try:
+            lay = json.loads(fields["layout"])
+            path = await asyncio.to_thread(apply_layout, path, lay)
+        except Exception as e:   # layout failed: print as before (fit to page)
+            print(f"Layout failed, printing without it: {e}", flush=True)
+            lay = None
     idx, pr = printer(fields.get("printer", "0"))
     ok, err = await ensure_queue(idx)
     if not ok:
@@ -226,7 +389,9 @@ async def print_file(request):
     copies = max(1, min(20, int(fields.get("copies", "1") or 1)))
     opts = ["-d", pr["queue"], "-n", str(copies), "-t", name[:60], "-o", f"media={MEDIA}"]
     opts += ["-o", "sides=two-sided-long-edge" if fields.get("duplex") == "1" else "sides=one-sided"]
-    if fields.get("fit", "1") == "1":
+    if lay:   # the sheet is already laid out exactly as in the preview: no extra scaling
+        opts += ["-o", "print-scaling=none"]
+    elif fields.get("fit", "1") == "1":
         opts += ["-o", "fit-to-page"]
     if fields.get("pages") and re.fullmatch(r"[0-9,\- ]+", fields["pages"]):
         opts += ["-o", "page-ranges=" + fields["pages"].replace(" ", "")]
@@ -286,7 +451,8 @@ async def cancel(request):
 
 
 app = web.Application(middlewares=[ingress_only], client_max_size=80 * 1024 * 1024)
-app.add_routes([web.get("/", page), web.post("/print", print_file), web.get("/jobs", jobs), web.post("/cancel", cancel)])
+app.add_routes([web.get("/", page), web.post("/print", print_file), web.get("/jobs", jobs), web.post("/cancel", cancel),
+                web.post("/prepare", prepare), web.get("/preview", preview), web.get("/paper", paper)])
 
 if __name__ == "__main__":
     os.makedirs(UPLOADS, exist_ok=True)

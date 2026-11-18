@@ -43,6 +43,10 @@ After saving, start the add-on and turn on **Show in sidebar**. The log must say
 Open **Print** from the sidebar → tap to choose a file (PDF, JPG, PNG, HEIC, TXT) → copies / two-sided / fit / pages →
 **PRINT AT HOME**. The list below shows the state of each job; ✕ cancels a queued job.
 
+**Preview and position** (optional, after choosing a file): shows the sheet with the printer's printable border (red dashes)
+and your page. Portrait / landscape, scale slider, **Fit**, **Center**, **100 %**, drag the page with a finger, arrows to see
+the other pages of a PDF. What you see is what gets printed; adjustments apply to all pages.
+
 The log also prints the **Ingress URL** used by the dashboard popup example (see the repository README).
 
 ## Notes

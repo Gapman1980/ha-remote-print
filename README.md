@@ -113,6 +113,10 @@ other_printers:
 Restart the add-on: the page shows a printer selector (remembered on each phone), paper/toner alerts follow the selected
 printer and the job list shows where each job went. The first printer is the default.
 
+### Print preview (new in 1.4.0)
+
+After choosing a file tap **🔍 Preview and position**: you see the sheet with the printer's printable border (red dashes) and your page on it. Portrait / landscape, scale slider, **Fit**, **Center**, **100 %**, drag the page with a finger, arrows for the other pages of a PDF. What you see is what gets printed (adjustments apply to all pages). Without the preview, printing works as before.
+
 ## Dashboard (optional)
 
 **Simple button** – [`examples/simple_button.yaml`](examples/simple_button.yaml): a normal Home Assistant button that opens the page.
@@ -213,6 +217,9 @@ other_printers:
 
 Riavvia l'add-on: nella pagina compare la scelta della stampante (ricordata su ogni telefono), gli avvisi carta/toner sono
 quelli della stampante scelta e nella lista si vede dove è andata ogni stampa. La prima è quella predefinita.
+
+### Anteprima di stampa (novità 1.4.0)
+Dopo aver scelto il file tocca **🔍 Anteprima e posizione**: vedi il foglio con il bordo stampabile della stampante (tratteggio rosso) e la tua pagina. Verticale / orizzontale, cursore della scala, **Adatta**, **Centra**, **100%**, trascini la pagina col dito, frecce per le altre pagine del PDF. Quello che vedi è quello che esce (le regolazioni valgono per tutte le pagine). Senza anteprima si stampa come prima.
 
 ### Stampanti provate dagli utenti
 

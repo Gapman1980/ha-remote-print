@@ -67,6 +67,31 @@ h3 { margin: 4px 2px 0; font-size: 12px; letter-spacing: 1px; color: var(--m); t
 .prs button i { width: 9px; height: 9px; border-radius: 50%; background: var(--m); flex: none; }
 .prs button.on i { background: var(--b); box-shadow: 0 0 8px var(--b); animation: lamp 2s ease-in-out infinite; }
 .lv .pn { color: var(--b); font-weight: 700; }
+/* 1.4.0: print preview with scale / position */
+.anb { display: none; width: 100%; min-height: 52px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--b) 55%, transparent);
+       background: color-mix(in srgb, var(--b) 9%, transparent); color: #fff; font-size: 16px; font-weight: 800; transition: .2s; }
+.anb:active { transform: scale(.98); }
+.anb.on { background: color-mix(in srgb, var(--b) 20%, transparent); box-shadow: 0 0 16px color-mix(in srgb, var(--b) 45%, transparent); }
+.ed { display: none; flex-direction: column; gap: 10px; }
+.tb { display: flex; gap: 8px; }
+.tb button { flex: 1; min-height: 42px; border-radius: 12px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.05);
+             color: #fff; font-size: 14px; font-weight: 800; transition: .2s; }
+.tb button:active { transform: scale(.95); }
+.tb button.on { border-color: var(--b); background: color-mix(in srgb, var(--b) 18%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--b) 40%, transparent); }
+.fg { display: flex; justify-content: center; padding: 6px 0; }
+.sh { position: relative; background: #fff; border-radius: 3px; overflow: hidden; touch-action: none; cursor: grab;
+      box-shadow: 0 8px 28px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.25); transition: width .25s, height .25s; }
+.sh.drag { cursor: grabbing; }
+.sh .mg { position: absolute; border: 1.5px dashed rgba(255,69,58,.75); pointer-events: none; z-index: 2; }
+.sh img { position: absolute; max-width: none; user-select: none; -webkit-user-drag: none; pointer-events: none;
+          outline: 1.5px solid color-mix(in srgb, var(--b) 70%, transparent); background: #fff; }
+.sh .ld { position: absolute; inset: 0; display: grid; place-items: center; color: #555; font-size: 13px; font-weight: 700; z-index: 3; }
+.sl { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; }
+.sl input { flex: 1; accent-color: var(--b); height: 30px; }
+.sl output { min-width: 52px; text-align: right; font-size: 17px; font-weight: 900; color: var(--b); }
+.pnv { display: none; align-items: center; justify-content: center; gap: 14px; color: var(--m); font-size: 13px; font-weight: 700; }
+.pnv button { width: 40px; height: 34px; border-radius: 10px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); color: #fff; font-size: 18px; font-weight: 900; }
+.edn { color: var(--m); font-size: 12px; text-align: center; }
 </style>
 </head>
 <body>
@@ -89,6 +114,15 @@ h3 { margin: 4px 2px 0; font-size: 12px; letter-spacing: 1px; color: var(--m); t
     <div class="riga"><label><span data-t="fit"></span><small data-t="fit_s"></small></label><label class="sw"><input type="checkbox" id="ad" checked><i></i></label></div>
     <div class="riga"><label><span data-t="pages"></span><small data-t="pages_s"></small></label><input class="pg" id="pg" inputmode="numeric"></div>
   </div>
+  <button class="anb" id="anb" type="button">🔍 <span data-t="prev"></span></button>
+  <div class="box ed" id="ed">
+    <div class="tb"><button type="button" id="o_p">▯ <span data-t="port"></span></button><button type="button" id="o_l">▭ <span data-t="land"></span></button></div>
+    <div class="fg" id="fg"><div class="sh" id="sh"><div class="mg" id="mgn"></div><img id="pim" alt=""><div class="ld" id="pld"></div></div></div>
+    <div class="pnv" id="pnv"><button type="button" id="pg_p">‹</button><span id="pg_l"></span><button type="button" id="pg_n">›</button></div>
+    <div class="sl"><span data-t="scale"></span><input type="range" id="sc" min="5" max="300" step="1"><output id="sco"></output></div>
+    <div class="tb"><button type="button" id="b_fit">⤢ <span data-t="fitb"></span></button><button type="button" id="b_cen">✛ <span data-t="cen"></span></button><button type="button" id="b_100">100%</button></div>
+    <div class="edn" id="edn"></div>
+  </div>
   <button class="vai" id="vai" disabled><span class="pr" id="pr"></span><span style="position:relative" data-t="print"></span></button>
   <div class="msg" id="msg"></div>
   <h3 data-t="recent"></h3>
@@ -107,6 +141,9 @@ const I18N = {
        pages: 'Pagine', pages_s: 'vuoto = tutte · es. 1-3,5', all: 'tutte', print: '🖨️ STAMPA A CASA', recent: 'Ultime stampe', none: 'Nessuna stampa ancora',
        sent: '✓ Inviato! La stampante di casa sta per stamparlo', uploading: 'Caricamento…', lost: '✗ Connessione persa durante il caricamento', lost2: '✗ File inviato ma nessuna risposta: guarda il Registro dell\'add-on (stampante raggiungibile? driver giusto?)',
        weird: 'Risposta inattesa', error: 'Errore', copy1: 'copia', copyN: 'copie', printer: 'Stampante',
+       prev: 'Anteprima e posizione', port: 'Verticale', land: 'Orizzontale', scale: 'Scala', fitb: 'Adatta', cen: 'Centra',
+       page: 'Pagina', allp: 'Trascina per spostare · le regolazioni valgono per tutte le pagine', drag: 'Trascina per spostare · il bordo rosso è il limite di stampa',
+       prep: 'Preparo l\'anteprima…',
        st: {queued: 'In coda', printing: 'Stampa…', done: 'Stampato ✓', canceled: 'Annullato'},
        al: {'media-empty': 'Carta finita: aggiungi fogli', 'media-jam': 'Foglio inceppato', 'toner-low': 'Toner in esaurimento', 'toner-empty': 'Toner finito',
             'marker-supply-low': 'Inchiostro/toner in esaurimento', 'door-open': 'Sportello aperto', 'cover-open': 'Coperchio aperto',
@@ -117,6 +154,9 @@ const I18N = {
        pages: 'Pages', pages_s: 'empty = all · e.g. 1-3,5', all: 'all', print: '🖨️ PRINT AT HOME', recent: 'Recent prints', none: 'No prints yet',
        sent: '✓ Sent! Your home printer is about to print it', uploading: 'Uploading…', lost: '✗ Connection lost while uploading', lost2: '✗ File sent but no answer: check the add-on Log (printer reachable? right driver?)',
        weird: 'Unexpected answer', error: 'Error', copy1: 'copy', copyN: 'copies', printer: 'Printer',
+       prev: 'Preview and position', port: 'Portrait', land: 'Landscape', scale: 'Scale', fitb: 'Fit', cen: 'Center',
+       page: 'Page', allp: 'Drag to move · adjustments apply to all pages', drag: 'Drag to move · the red border is the printable limit',
+       prep: 'Preparing the preview…',
        st: {queued: 'Queued', printing: 'Printing…', done: 'Printed ✓', canceled: 'Canceled'},
        al: {'media-empty': 'Out of paper', 'media-jam': 'Paper jam', 'toner-low': 'Toner low', 'toner-empty': 'Toner empty',
             'marker-supply-low': 'Ink/toner low', 'door-open': 'Door open', 'cover-open': 'Cover open',
@@ -148,8 +188,78 @@ function drawPrinters() {
   $('prs').querySelectorAll('button').forEach(b => b.onclick = () => {
     sel = +b.dataset.i; try { localStorage.setItem('rp_printer', sel); } catch (e) {}
     drawPrinters(); load();
+    if (edOpen) loadPaper().then(draw);   // printable margins change with the printer
   });
 }
+
+// ---------- 1.4.0: preview with scale / position (#5) ----------
+// P = file uploaded once for the preview {token, name, pages, sizes[[w,h] pt]}, PAP = sheet {paper [W,H] pt portrait, margins}
+// L = layout sent with the print: orientation, scale, centre offset from the sheet centre in points (y up)
+let P = null, PAP = null, L = {o: 'p', s: 1, dx: 0, dy: 0}, pgN = 1, edOpen = false, K = 1, lastSrc = '';
+const sheet = () => { const [w, h] = PAP.paper; return L.o === 'l' ? [h, w] : [w, h]; };
+const marg = () => { const m = PAP.margins; if (L.o === 'p') return m;
+  const a = Math.max(m.t, m.b), b = Math.max(m.l, m.r); return {l: a, r: a, t: b, b: b}; };   // landscape: safe side
+const psize = () => (P.sizes[pgN - 1] || P.sizes[0] || [595, 842]);
+async function loadPaper() {
+  try { PAP = await (await fetch('paper?printer=' + sel, {cache: 'no-store'})).json(); }
+  catch (e) { PAP = {paper: [595.28, 841.89], margins: {l: 12, r: 12, t: 12, b: 12}}; }
+}
+function fit() {
+  const [W, H] = sheet(), m = marg(), [w, h] = psize();
+  L.s = Math.min((W - m.l - m.r) / w, (H - m.t - m.b) / h); center();
+}
+function center() { const m = marg(); L.dx = (m.l - m.r) / 2; L.dy = (m.b - m.t) / 2; }
+function draw() {
+  if (!P || !PAP) return;
+  const [W, H] = sheet(), m = marg(), [w, h] = psize();
+  const avail = Math.max(200, $('fg').clientWidth - 4), maxH = Math.min(window.innerHeight * 0.55, 560);
+  K = Math.min(avail / W, maxH / H);
+  const sh = $('sh'); sh.style.width = W * K + 'px'; sh.style.height = H * K + 'px';
+  Object.assign($('mgn').style, {left: m.l * K + 'px', top: m.t * K + 'px', right: m.r * K + 'px', bottom: m.b * K + 'px'});
+  const im = $('pim'), iw = L.s * w * K, ih = L.s * h * K;
+  Object.assign(im.style, {width: iw + 'px', height: ih + 'px', left: (W / 2 + L.dx - L.s * w / 2) * K + 'px', top: (H / 2 - L.dy - L.s * h / 2) * K + 'px'});
+  const r = Math.min(150, Math.max(15, Math.ceil(72 * L.s * K * (window.devicePixelRatio || 1) / 15) * 15));   // dpi steps of 15 = cached
+  const src = `preview?token=${encodeURIComponent(P.token)}&page=${pgN}&r=${r}`;
+  if (src !== lastSrc) { lastSrc = src; im.src = src; }
+  $('sc').value = Math.round(L.s * 100); $('sco').textContent = Math.round(L.s * 100) + '%';
+  $('o_p').classList.toggle('on', L.o === 'p'); $('o_l').classList.toggle('on', L.o === 'l');
+  $('pnv').style.display = P.pages > 1 ? 'flex' : 'none'; $('pg_l').textContent = `${T.page} ${pgN} / ${P.pages}`;
+  $('edn').textContent = P.pages > 1 ? T.allp : T.drag;
+}
+function closeEd() { edOpen = false; $('ed').style.display = 'none'; $('anb').classList.remove('on'); }
+async function openEd() {
+  edOpen = true; $('anb').classList.add('on'); $('ed').style.display = 'flex';
+  if (P) { draw(); return; }
+  $('pim').removeAttribute('src'); lastSrc = ''; $('pld').textContent = T.prep; $('pld').style.display = 'grid';
+  $('sh').style.width = '210px'; $('sh').style.height = '297px';
+  const fd = new FormData(); fd.append('lang', lang); fd.append('file', chosen, chosen.name);
+  const want = chosen;
+  try {
+    const [r] = await Promise.all([fetch('prepare', {method: 'POST', body: fd}).then(x => x.json()), loadPaper()]);
+    if (want !== chosen || !edOpen) return;   // file changed meanwhile
+    if (!r.ok) { closeEd(); msg('✗ ' + (r.error || T.error), false); return; }
+    P = r; pgN = 1; const [w, h] = psize(); L.o = w > h ? 'l' : 'p'; fit();
+    $('pld').style.display = 'none'; draw();
+  } catch (e) { closeEd(); msg(T.lost, false); }
+}
+$('anb').onclick = () => edOpen ? closeEd() : (chosen && openEd());
+$('o_p').onclick = () => { L.o = 'p'; fit(); draw(); };
+$('o_l').onclick = () => { L.o = 'l'; fit(); draw(); };
+$('b_fit').onclick = () => { fit(); draw(); };
+$('b_cen').onclick = () => { center(); draw(); };
+$('b_100').onclick = () => { L.s = 1; center(); draw(); };
+$('sc').oninput = e => {   // zoom around the current centre
+  L.s = Math.max(.05, +e.target.value / 100); draw(); };
+$('pg_p').onclick = () => { if (pgN > 1) { pgN--; draw(); } };
+$('pg_n').onclick = () => { if (P && pgN < P.pages) { pgN++; draw(); } };
+{ // drag the page on the sheet (finger or mouse)
+  let st = null; const sh = $('sh');
+  sh.addEventListener('pointerdown', e => { if (!P) return; st = {x: e.clientX, y: e.clientY, dx: L.dx, dy: L.dy}; sh.setPointerCapture(e.pointerId); sh.classList.add('drag'); });
+  sh.addEventListener('pointermove', e => { if (!st) return; L.dx = st.dx + (e.clientX - st.x) / K; L.dy = st.dy - (e.clientY - st.y) / K; draw(); });
+  const end = () => { st = null; sh.classList.remove('drag'); };
+  sh.addEventListener('pointerup', end); sh.addEventListener('pointercancel', end);
+}
+window.addEventListener('resize', () => edOpen && draw());
 drawPrinters();
 $('meno').onclick = () => { copies = Math.max(1, copies - 1); $('cp').textContent = copies; };
 $('piu').onclick = () => { copies = Math.min(20, copies + 1); $('cp').textContent = copies; };
@@ -160,6 +270,7 @@ $('file').onchange = e => {
   $('dt').textContent = chosen ? chosen.name : T.pick;
   $('ds').textContent = chosen ? kb(chosen.size) + ' · ' + T.change : T.pick_s;
   $('vai').disabled = !chosen; $('msg').textContent = ''; $('msg').className = 'msg';
+  P = null; closeEd(); $('anb').style.display = chosen ? 'block' : 'none';   // new file: new preview
 };
 const msg = (t, ok) => { $('msg').textContent = t; $('msg').className = 'msg ' + (ok ? 'ok' : 'ko'); };
 $('vai').onclick = () => {
@@ -167,7 +278,10 @@ $('vai').onclick = () => {
   const fd = new FormData();
   fd.append('printer', sel); fd.append('copies', copies); fd.append('duplex', $('fr').checked ? '1' : '0');
   fd.append('fit', $('ad').checked ? '1' : '0'); fd.append('pages', $('pg').value.trim()); fd.append('lang', lang);
-  fd.append('file', chosen, chosen.name);
+  if (edOpen && P) {   // already uploaded for the preview: send the token and the layout, not the file again
+    fd.append('token', P.token); fd.append('name', chosen.name);
+    fd.append('layout', JSON.stringify({o: L.o, s: +L.s.toFixed(4), dx: +L.dx.toFixed(2), dy: +L.dy.toFixed(2)}));
+  } else fd.append('file', chosen, chosen.name);
   const x = new XMLHttpRequest();
   x.open('POST', 'print');
   x.upload.onprogress = ev => { if (ev.lengthComputable) $('pr').style.width = (ev.loaded / ev.total * 100) + '%'; };
