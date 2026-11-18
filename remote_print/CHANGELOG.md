@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1
+- **Clearer reason when the queue can't be created** (driverless): the add-on now asks the printer once (read-only, nothing is
+  printed) and writes in the Log what it answered, e.g. *IPP authentication is on*, *encrypted connection refused*,
+  *wrong path*, *IPP status client-error-forbidden*, or the formats it offers. The same line is shown on the page.
+
 ## 1.5.0
 - **Non-admin Home Assistant users** ([#3](https://github.com/Gapman1980/ha-remote-print/issues/3)): new option
   `allowed_users` (Home Assistant usernames, e.g. `alisha`). Those users can open **Print** from the sidebar or a

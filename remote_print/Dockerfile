@@ -14,6 +14,7 @@ COPY run.sh /run.sh
 COPY app.py /app.py
 COPY index.html /index.html
 COPY queue.sh /queue.sh
+COPY ippcheck.py /ippcheck.py
 RUN chmod +x /run.sh /queue.sh
 
 ENTRYPOINT []

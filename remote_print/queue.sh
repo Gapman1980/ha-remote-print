@@ -34,7 +34,12 @@ if [ "$DRIVER" = "brlaser" ]; then
 fi
 
 echo "[$Q] Driver: driverless (IPP Everywhere / AirPrint)"
-lpadmin -p "$Q" -E -v "$URI" -m everywhere -o printer-error-policy=retry-job -o media-default=$MEDIA || exit $?
+lpadmin -p "$Q" -E -v "$URI" -m everywhere -o printer-error-policy=retry-job -o media-default=$MEDIA
+RC=$?
+if [ $RC -ne 0 ]; then
+  python3 /ippcheck.py "$Q" "$URI"   # 1.5.1: say in the Log what the printer answered (read-only IPP request)
+  exit $RC
+fi
 
 # URF (Apple raster) printers only understand 8-bit gray or 24-bit colour pages.
 # Some printers (e.g. Samsung M2070) end up with a 1-bit / black colour model in the generated PPD:
