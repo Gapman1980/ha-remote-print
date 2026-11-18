@@ -130,7 +130,7 @@ toner level, pages left, printed pages, scans, misfeeds and an **UPLOAD FILE AND
 its **Back** button returns to the printer popup.
 
 - Needs (HACS): [button-card](https://github.com/custom-cards/button-card), [browser_mod](https://github.com/thomasloven/hass-browser_mod), [card-mod](https://github.com/thomasloven/lovelace-card-mod).
-- Sensors are written for the HP Printer integration: replace `sensor.YOUR_PRINTER_` with your sensors.
+- Set the three `variables` (in the mini card and in the popup): `prefix` (start of your printer's sensor ids), `status` and `name`. **Ink and toner levels are found automatically**: one animated bar per colour (black, cyan, magenta, yellow ...) for any printer added with the **IPP** integration (usually auto-discovered) or the HP Printer integration.
 - Replace `YOUR_INGRESS_TOKEN` with the address shown in the add-on **Log**: `Ingress URL for the dashboard popup: /api/hassio_ingress/…/`.
 - Administrators can always open the page; for other family members see *Non-admin users* below.
 
@@ -256,7 +256,7 @@ Hai provato un'altra stampante? Scrivilo in una [issue](https://github.com/Gapma
 
 ### Card per la dashboard (facoltativa)
 - `examples/simple_button.yaml`: pulsante semplice che apre la pagina.
-- `examples/printer_card_popup.yaml`: mini card animata della stampante + popup con toner e contatori, e pulsante **CARICA FILE E STAMPA** che apre la pagina *dentro il popup* (con **Indietro** torni al popup). Servono button-card, browser_mod e card-mod; sostituisci `sensor.YOUR_PRINTER_` con i tuoi sensori e `YOUR_INGRESS_TOKEN` con l'indirizzo scritto nel Registro dell'add-on.
+- `examples/printer_card_popup.yaml`: mini card animata della stampante + popup con livelli inchiostro / toner e contatori, e pulsante **CARICA FILE E STAMPA** che apre la pagina *dentro il popup* (con **Indietro** torni al popup). Servono button-card, browser_mod e card-mod; imposta le tre `variables` (`prefix` = inizio dei nomi dei sensori, `status`, `name`): **i livelli di inchiostro / toner li trova da sola**, una barra animata per colore, con l'integrazione **IPP** (di solito trovata in automatico) o HP Printer; poi sostituisci `YOUR_INGRESS_TOKEN` con l'indirizzo scritto nel Registro dell'add-on.
 - **Utenti non amministratori** (1.5.0): scrivi i loro **nomi utente** di Home Assistant in `allowed_users` (es. `- alisha`), salva e riavvia. Aprono **Stampa** dal menu laterale o dal popup con il loro accesso, anche fuori casa e senza porte aperte; gli altri vedono 🔒 *Non autorizzato*. La voce **Stampa** compare nel menu di tutti gli utenti (chi non serve la può nascondere).
 - Solo rete di casa, senza utenti: attiva `lan_access`, metti una porta (es. `8099`) nella sezione **Rete**, riavvia l'add-on e usa una card **Pagina web** con `http://IP-HOME-ASSISTANT:8099/`. ⚠️ Niente password: chiunque sia sul tuo Wi-Fi può stampare; non aprire mai la porta sul router; funziona solo aprendo Home Assistant in `http://` da casa (non da `https://` / Nabu Casa).
 
