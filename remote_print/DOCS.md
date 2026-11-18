@@ -18,6 +18,7 @@ Upload a file from your phone (even away from home) and your network printer pri
 - **duplex_default**: the "two-sided" switch starts on.
 - **keep_days**: uploaded files are deleted after this many days.
 - **language**: `auto` (phone language), `en` or `it`.
+- **allowed_users** (optional, 1.5.0): Home Assistant usernames that may print without being administrators (see Notes).
 - **printer_name** (optional): name of the main printer on the page when you have more than one.
 - **other_printers** (optional): more printers to choose from on the page. Easiest with **⋮ → Edit in YAML**:
 
@@ -52,6 +53,9 @@ The log also prints the **Ingress URL** used by the dashboard popup example (see
 
 ## Notes
 
-- Only Home Assistant administrators can open add-on pages. For non-admin users: turn on `lan_access`, set a port in **Network**, restart, then use a Webpage card with `http://HOME-ASSISTANT-IP:PORT/` (local network only, no password: anyone on your Wi-Fi can print; never forward the port; needs Home Assistant opened over `http://`).
+- **Non-admin users** (1.5.0): add their Home Assistant **usernames** to `allowed_users` (e.g. `- alisha`), save and
+  restart. They open **Print** from the sidebar or the dashboard popup with their own login, also away from home.
+  Administrators can always use it; other users see "Not allowed" (they can hide the sidebar entry).
+- Alternative for the local network only: turn on `lan_access`, set a port in **Network**, restart, then use a Webpage card with `http://HOME-ASSISTANT-IP:PORT/` (no password: anyone on your Wi-Fi can print; never forward the port; needs Home Assistant opened over `http://`).
 - With `brlaser` the printer does not report paper/toner state (no IPP), so alerts are not shown.
 - Files never leave your home network: they go phone → Home Assistant → printer.

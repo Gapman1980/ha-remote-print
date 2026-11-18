@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0
+- **Non-admin Home Assistant users** ([#3](https://github.com/Gapman1980/ha-remote-print/issues/3)): new option
+  `allowed_users` (Home Assistant usernames, e.g. `alisha`). Those users can open **Print** from the sidebar or a
+  dashboard popup like administrators, through Home Assistant with their own login: no extra port, no `lan_access`.
+  Administrators can always use it; anyone else sees a "Not allowed" page. Empty list (default) = administrators only, as before.
+- The **Print** entry now appears in the sidebar of every user (Home Assistant can only show an add-on panel to
+  everyone or to administrators). Users not in the list can hide it from their sidebar.
+- With prints from more than one person, the job list shows who printed each file.
+
 ## 1.4.1
 - **Clean up the job list**: each finished or canceled print has a 🗑 button to remove it from the list, and
   **Clear** next to "Recent prints" empties the whole list (tap twice to confirm). Jobs still queued or printing stay.

@@ -158,9 +158,65 @@ def cleanup_uploads():
             os.remove(p)
 
 
+# 1.5.0 (#3): the panel is no longer admin-only in Home Assistant; the add-on lets in administrators plus the
+# users listed in allowed_users. Home Assistant ingress tells who is asking with the X-Remote-User-* headers
+# (set by the Supervisor, a browser cannot fake them).
+ALLOWED_USERS = {str(u).strip().lower() for u in (OPT.get("allowed_users") or []) if str(u).strip()}
+_LOGGED = set()
+
+
+def log_once(key, text):
+    if key not in _LOGGED:
+        _LOGGED.add(key)
+        print("[RemotePrint] " + text, flush=True)
+
+
+def ha_user(request):
+    h = request.headers
+    return {"id": h.get("X-Remote-User-Id", ""), "name": h.get("X-Remote-User-Name", ""),
+            "display": h.get("X-Remote-User-Display-Name", ""),
+            "groups": [g.strip() for g in h.get("X-Remote-User-Groups", "").split(",") if g.strip()]}
+
+
+def user_allowed(u):
+    if not u["id"]:
+        return True   # old Supervisor without user headers: Home Assistant itself decides (as before 1.5.0)
+    if "system-admin" in u["groups"]:
+        return True
+    return bool(ALLOWED_USERS & {u["name"].lower(), u["display"].lower()} - {""})
+
+
+DENIED = {"it": ("Non autorizzato", "Il tuo utente non può usare la stampa da remoto. Chiedi a un amministratore di aggiungerti in "
+                 "<b>allowed_users</b> nella configurazione dell'add-on."),
+          "en": ("Not allowed", "Your user can't use Remote Print. Ask an administrator to add you to "
+                 "<b>allowed_users</b> in the add-on configuration.")}
+
+
+def denied_page(request):
+    lang = OPT.get("language", "auto")
+    if lang not in DENIED:
+        lang = "it" if request.headers.get("Accept-Language", "").lower().startswith("it") else "en"
+    t, s = DENIED[lang]
+    html = ("<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
+            "<body style='margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1020;color:#fff;font-family:system-ui'>"
+            f"<div style='max-width:420px;padding:24px;text-align:center'><div style='font-size:54px'>🔒</div><h2>{t}</h2>"
+            f"<p style='color:#9aa4b8;line-height:1.5'>{s}</p></div>")
+    return web.Response(status=403, text=html, content_type="text/html")
+
+
 @web.middleware
 async def ingress_only(request, handler):
-    if request.remote != INGRESS_IP and not (LAN_ACCESS and is_local(request.remote)):
+    if request.remote == INGRESS_IP:
+        u = ha_user(request)
+        if not u["id"]:
+            log_once("nouser", "Home Assistant sent no user information (old Supervisor?): access as before")
+        elif not u["groups"]:
+            log_once("nogroups", "Home Assistant sent no user groups: only users in allowed_users can print")
+        if not user_allowed(u):
+            log_once("deny-" + u["id"], f"User '{u['name']}' is not an administrator and not in allowed_users: access denied")
+            return denied_page(request)
+        request["user"] = u["display"] or u["name"]
+    elif not (LAN_ACCESS and is_local(request.remote)):
         return web.Response(status=403, text="Only through Home Assistant (or enable lan_access)")
     return await handler(request)
 
@@ -405,7 +461,8 @@ async def print_file(request):
     for j in jobs_:
         if j["id"] == jid:
             j["closed"] = True
-    jobs_.append({"id": jid, "name": name, "copies": copies, "time": time.time(), "canceled": False, "printer": pr["name"]})
+    jobs_.append({"id": jid, "name": name, "copies": copies, "time": time.time(), "canceled": False, "printer": pr["name"],
+                  "by": request.get("user", "")})
     write_jobs(jobs_)
     return web.json_response({"ok": True, "id": jid})
 

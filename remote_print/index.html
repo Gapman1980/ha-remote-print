@@ -310,7 +310,8 @@ async function load() {
   try {
     const r = await (await fetch('jobs?printer=' + sel, {cache: 'no-store'})).json();
     const L = r.jobs || [];
-    $('lista').innerHTML = L.length ? L.map(j => `<div class="lv"><div class="n">${j.name.replace(/</g, '&lt;')}<small>${new Date(j.time * 1000).toLocaleString(lang, {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})} · ${j.copies} ${j.copies > 1 ? T.copyN : T.copy1}${PRS.length > 1 && j.printer ? ` · <span class="pn">${String(j.printer).replace(/</g, '&lt;')}</span>` : ''}</small></div>
+    const molti = new Set(L.map(j => j.by).filter(Boolean)).size > 1;   // 1.5.0: show who printed only when there is more than one person
+    $('lista').innerHTML = L.length ? L.map(j => `<div class="lv"><div class="n">${j.name.replace(/</g, '&lt;')}<small>${new Date(j.time * 1000).toLocaleString(lang, {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})} · ${j.copies} ${j.copies > 1 ? T.copyN : T.copy1}${PRS.length > 1 && j.printer ? ` · <span class="pn">${String(j.printer).replace(/</g, '&lt;')}</span>` : ''}${molti && j.by ? ` · 👤 ${String(j.by).replace(/</g, '&lt;')}` : ''}</small></div>
       <span class="pill p-${j.state}">${T.st[j.state] || j.state}</span>${['queued', 'printing'].includes(j.state) ? `<button class="x" onclick="cancelJob(${j.id})">✕</button>`
         : `<button class="del" title="${T.rm}" aria-label="${T.rm}" onclick="forgetJob(this, ${j.id}, ${j.time})">🗑</button>`}</div>`).join('')
       : `<div class="vuoto">${T.none}</div>`;
