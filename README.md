@@ -77,6 +77,7 @@ Something wrong? [Open a problem report](https://github.com/Gapman1980/ha-remote
 | Brother DCP-1612W | `brlaser` | `socket://IP:9100` | `DCP-1600` | ✅ works |
 | Pantum (laser) | `driverless` | `ipp://IP/ipp` | – | ✅ works |
 | Canon GX2000 series (GX2051, ink) | `driverless` | `ipp://IP/ipp/print` | – | ✅ works ([#1](https://github.com/Gapman1980/ha-remote-print/issues/1)) |
+| Epson Expression Premium XP-960 (ink) | `driverless` | `ipp://IP/ipp/print` | – | ✅ works |
 
 Tried another printer? Tell us in an [issue](https://github.com/Gapman1980/ha-remote-print/issues) (model + settings) and it will be added here.
 
@@ -233,6 +234,7 @@ Qualcosa non va? [Apri una segnalazione](https://github.com/Gapman1980/ha-remote
 | Brother DCP-1612W | `brlaser` | `socket://IP:9100` | `DCP-1600` | ✅ funziona |
 | Pantum (laser) | `driverless` | `ipp://IP/ipp` | – | ✅ funziona |
 | Canon GX2000 series (GX2051, inkjet) | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona ([#1](https://github.com/Gapman1980/ha-remote-print/issues/1)) |
+| Epson Expression Premium XP-960 (inkjet) | `driverless` | `ipp://IP/ipp/print` | – | ✅ funziona |
 
 Hai provato un'altra stampante? Scrivilo in una [issue](https://github.com/Gapman1980/ha-remote-print/issues) (modello + impostazioni) e la aggiungiamo.
 
