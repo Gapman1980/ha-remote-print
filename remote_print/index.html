@@ -92,6 +92,16 @@ h3 { margin: 4px 2px 0; font-size: 12px; letter-spacing: 1px; color: var(--m); t
 .pnv { display: none; align-items: center; justify-content: center; gap: 14px; color: var(--m); font-size: 13px; font-weight: 700; }
 .pnv button { width: 40px; height: 34px; border-radius: 10px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); color: #fff; font-size: 18px; font-weight: 900; }
 .edn { color: var(--m); font-size: 12px; text-align: center; }
+/* 1.4.1: remove finished jobs from the list */
+.lh { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.svuota { display: none; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.05); color: var(--m); border-radius: 999px;
+          padding: 5px 12px; font-size: 12px; font-weight: 800; transition: .2s; }
+.svuota:active { transform: scale(.95); }
+.svuota.conf { color: #FF6961; border-color: #FF453A; background: #FF453A22; box-shadow: 0 0 12px #FF453A55; animation: lamp 1s infinite; }
+.del { border: none; background: rgba(255,255,255,.06); color: var(--m); border-radius: 10px; padding: 6px 8px; font-size: 13px; transition: .2s; }
+.del:active { transform: scale(.9); background: #FF453A33; }
+.lv.via { animation: via .3s ease-in forwards; }
+@keyframes via { to { opacity: 0; transform: translateX(40px); } }
 </style>
 </head>
 <body>
@@ -125,7 +135,7 @@ h3 { margin: 4px 2px 0; font-size: 12px; letter-spacing: 1px; color: var(--m); t
   </div>
   <button class="vai" id="vai" disabled><span class="pr" id="pr"></span><span style="position:relative" data-t="print"></span></button>
   <div class="msg" id="msg"></div>
-  <h3 data-t="recent"></h3>
+  <div class="lh"><h3 data-t="recent"></h3><button class="svuota" id="svuota" type="button">🧹 <span id="sv_t" data-t="clear"></span></button></div>
   <div id="lista" style="display:flex;flex-direction:column;gap:8px"><div class="vuoto">…</div></div>
 </div>
 <script>
@@ -143,7 +153,7 @@ const I18N = {
        weird: 'Risposta inattesa', error: 'Errore', copy1: 'copia', copyN: 'copie', printer: 'Stampante',
        prev: 'Anteprima e posizione', port: 'Verticale', land: 'Orizzontale', scale: 'Scala', fitb: 'Adatta', cen: 'Centra',
        page: 'Pagina', allp: 'Trascina per spostare · le regolazioni valgono per tutte le pagine', drag: 'Trascina per spostare · il bordo rosso è il limite di stampa',
-       prep: 'Preparo l\'anteprima…',
+       prep: 'Preparo l\'anteprima…', clear: 'Svuota', sure: 'Tocca ancora per svuotare', rm: 'Togli dalla lista',
        st: {queued: 'In coda', printing: 'Stampa…', done: 'Stampato ✓', canceled: 'Annullato'},
        al: {'media-empty': 'Carta finita: aggiungi fogli', 'media-jam': 'Foglio inceppato', 'toner-low': 'Toner in esaurimento', 'toner-empty': 'Toner finito',
             'marker-supply-low': 'Inchiostro/toner in esaurimento', 'door-open': 'Sportello aperto', 'cover-open': 'Coperchio aperto',
@@ -156,7 +166,7 @@ const I18N = {
        weird: 'Unexpected answer', error: 'Error', copy1: 'copy', copyN: 'copies', printer: 'Printer',
        prev: 'Preview and position', port: 'Portrait', land: 'Landscape', scale: 'Scale', fitb: 'Fit', cen: 'Center',
        page: 'Page', allp: 'Drag to move · adjustments apply to all pages', drag: 'Drag to move · the red border is the printable limit',
-       prep: 'Preparing the preview…',
+       prep: 'Preparing the preview…', clear: 'Clear', sure: 'Tap again to clear', rm: 'Remove from the list',
        st: {queued: 'Queued', printing: 'Printing…', done: 'Printed ✓', canceled: 'Canceled'},
        al: {'media-empty': 'Out of paper', 'media-jam': 'Paper jam', 'toner-low': 'Toner low', 'toner-empty': 'Toner empty',
             'marker-supply-low': 'Ink/toner low', 'door-open': 'Door open', 'cover-open': 'Cover open',
@@ -301,14 +311,32 @@ async function load() {
     const r = await (await fetch('jobs?printer=' + sel, {cache: 'no-store'})).json();
     const L = r.jobs || [];
     $('lista').innerHTML = L.length ? L.map(j => `<div class="lv"><div class="n">${j.name.replace(/</g, '&lt;')}<small>${new Date(j.time * 1000).toLocaleString(lang, {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})} · ${j.copies} ${j.copies > 1 ? T.copyN : T.copy1}${PRS.length > 1 && j.printer ? ` · <span class="pn">${String(j.printer).replace(/</g, '&lt;')}</span>` : ''}</small></div>
-      <span class="pill p-${j.state}">${T.st[j.state] || j.state}</span>${['queued', 'printing'].includes(j.state) ? `<button class="x" onclick="cancelJob(${j.id})">✕</button>` : ''}</div>`).join('')
+      <span class="pill p-${j.state}">${T.st[j.state] || j.state}</span>${['queued', 'printing'].includes(j.state) ? `<button class="x" onclick="cancelJob(${j.id})">✕</button>`
+        : `<button class="del" title="${T.rm}" aria-label="${T.rm}" onclick="forgetJob(this, ${j.id}, ${j.time})">🗑</button>`}</div>`).join('')
       : `<div class="vuoto">${T.none}</div>`;
+    $('svuota').style.display = L.some(j => !['queued', 'printing'].includes(j.state)) ? 'inline-block' : 'none';
     const al = (r.alerts || []).map(a => T.al[a.replace(/-(warning|error|report)$/, '')] || a);
     $('avv').style.display = al.length ? 'block' : 'none'; $('avv').textContent = '⚠️ ' + al.join(' · ');
     $('hd').classList.toggle('lavora', L.some(j => j.state === 'printing'));
   } catch (e) {}
 }
 async function cancelJob(id) { await fetch('cancel?id=' + id, {method: 'POST'}); load(); }
+// 1.4.1: 🗑 removes one finished job from the list; "Clear" needs a second tap within 3 s (no browser dialogs inside the app)
+async function forgetJob(b, id, t) {
+  b.closest('.lv').classList.add('via');
+  await Promise.all([fetch(`forget?id=${id}&t=${t}`, {method: 'POST'}), new Promise(r => setTimeout(r, 300))]); load();
+}
+let svT = null;
+$('svuota').onclick = async () => {
+  const b = $('svuota');
+  if (!b.classList.contains('conf')) {
+    b.classList.add('conf'); $('sv_t').textContent = T.sure;
+    svT = setTimeout(() => { b.classList.remove('conf'); $('sv_t').textContent = T.clear; }, 3000); return;
+  }
+  clearTimeout(svT); b.classList.remove('conf'); $('sv_t').textContent = T.clear;
+  document.querySelectorAll('#lista .lv').forEach(r => { if (r.querySelector('.del')) r.classList.add('via'); });
+  await Promise.all([fetch('clear', {method: 'POST'}), new Promise(r => setTimeout(r, 300))]); load();
+};
 load(); setInterval(load, 3000);
 </script>
 </body>

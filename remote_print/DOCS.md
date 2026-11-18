@@ -41,7 +41,8 @@ After saving, start the add-on and turn on **Show in sidebar**. The log must say
 ## Use
 
 Open **Print** from the sidebar → tap to choose a file (PDF, JPG, PNG, HEIC, TXT) → copies / two-sided / fit / pages →
-**PRINT AT HOME**. The list below shows the state of each job; ✕ cancels a queued job.
+**PRINT AT HOME**. The list below shows the state of the last 15 jobs; ✕ cancels a queued job, 🗑 removes a finished
+job from the list and **Clear** (tap twice) empties it.
 
 **Preview and position** (optional, after choosing a file): shows the sheet with the printer's printable border (red dashes)
 and your page. Portrait / landscape, scale slider, **Fit**, **Center**, **100 %**, drag the page with a finger, arrows to see

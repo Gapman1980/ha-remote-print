@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1
+- **Clean up the job list**: each finished or canceled print has a 🗑 button to remove it from the list, and
+  **Clear** next to "Recent prints" empties the whole list (tap twice to confirm). Jobs still queued or printing stay.
+  Reminder: the list already showed only the last 15 prints, and uploaded files are deleted after `keep_days`.
+
 ## 1.4.0
 - **Print preview with scale and position** ([#5](https://github.com/Gapman1980/ha-remote-print/issues/5)): after choosing a
   file, tap **Preview and position** to see the sheet with the printer's printable border and your page on it.

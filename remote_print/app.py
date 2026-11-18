@@ -450,8 +450,27 @@ async def cancel(request):
     return web.json_response({"ok": True})
 
 
+async def forget(request):
+    """1.4.1: remove one finished job from the list (id + time: CUPS numbers repeat after a restart)."""
+    jid = int(request.query.get("id", "0"))
+    t = float(request.query.get("t", "0"))
+    write_jobs([j for j in read_jobs() if not (j["id"] == jid and abs(j["time"] - t) < 1)])
+    return web.json_response({"ok": True})
+
+
+async def clear(request):
+    """1.4.1: empty the list, keeping only jobs still queued or printing."""
+    _, open_ = await run("lpstat", "-W", "not-completed", "-o")
+    op = {int(x[1]) for x in re.findall(rf"^{QUEUE_RE}", open_, re.M)}
+    keep = [j for j in read_jobs() if j["id"] in op and not j.get("canceled") and not j.get("closed")
+            and time.time() - j["time"] < 6 * 3600]
+    write_jobs(keep)
+    return web.json_response({"ok": True})
+
+
 app = web.Application(middlewares=[ingress_only], client_max_size=80 * 1024 * 1024)
 app.add_routes([web.get("/", page), web.post("/print", print_file), web.get("/jobs", jobs), web.post("/cancel", cancel),
+                web.post("/forget", forget), web.post("/clear", clear),
                 web.post("/prepare", prepare), web.get("/preview", preview), web.get("/paper", paper)])
 
 if __name__ == "__main__":
