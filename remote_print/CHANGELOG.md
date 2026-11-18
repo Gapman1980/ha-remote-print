@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2
+- The yellow alert box no longer shows CUPS' own internal messages (e.g. `cups-waiting-for-job-completed`, which appeared
+  during every print on some printers and vanished at the end, [#7](https://github.com/Gapman1980/ha-remote-print/issues/7)). Real printer alerts (paper, toner, door ...) are shown as before.
+
 ## 1.5.1
 - **Clearer reason when the queue can't be created** (driverless): the add-on now asks the printer once (read-only, nothing is
   printed) and writes in the Log what it answered, e.g. *IPP authentication is on*, *encrypted connection refused*,

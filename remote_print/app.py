@@ -492,7 +492,8 @@ async def jobs(request):
             s = "done" if time.time() - j["time"] > 600 else "queued"
         out.append({**j, "state": s})
     alerts = re.search(r"Alerts:\s*(.*)", state)
-    alerts = [a for a in (alerts.group(1).split() if alerts else []) if a != "none"]
+    # 1.5.2: hide CUPS' own internal reasons (e.g. cups-waiting-for-job-completed during every print): not printer alerts
+    alerts = [a for a in (alerts.group(1).split() if alerts else []) if a != "none" and not a.startswith("cups-")]
     return web.json_response({"jobs": out, "alerts": alerts, "queue_ok": rc == 0 and "disabled" not in state})
 
 
