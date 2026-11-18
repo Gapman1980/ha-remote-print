@@ -5,6 +5,16 @@
 #           or 'sensor.hp_laserjet_' (HP Printer integration)
 #   status: the sensor with the printer state, e.g. 'sensor.epson_xp_960_series' (IPP) or 'sensor.hp_laserjet_status' (HP)
 #   name:   the name shown in the popup
+#   style:  bars (one bar per colour) or tubes (one glass tube per cartridge, with a moving liquid)
+#   inks:   empty = automatic. To choose the entities yourself (order and names as you like):
+#             inks:
+#               - entity: sensor.epson_xp_960_series_black_ink
+#                 name: Nero
+#               - entity: sensor.epson_xp_960_series_light_cyan_ink
+#                 name: Azzurro chiaro
+#               - sensor.epson_xp_960_series_yellow_ink        # just the id is fine too
+#           colour comes from the name (black/nero, cyan/azzurro, light/chiaro, magenta, yellow/giallo ...)
+#           or set it with  color: '#00C8FF'
 # Ink / toner levels are found AUTOMATICALLY: every % sensor with that prefix that is an ink, toner or cartridge
 # (the IPP integration creates one per colour: black, cyan, magenta, yellow ...). Colour printers get one bar per colour.
 # Most network printers are found by Home Assistant itself: Settings -> Devices & services -> "Discovered" -> IPP.
@@ -19,6 +29,8 @@ variables:
   prefix: sensor.YOUR_PRINTER_
   status: sensor.YOUR_PRINTER_status
   name: My printer
+  style: bars   # bars | tubes
+  inks: []      # empty = automatic. Or pick them: - sensor.epson_black_ink   /   - entity: sensor.x  name: Nero  color: '#333'
 section_mode: true
 grid_options:
   columns: 3
@@ -35,8 +47,8 @@ custom_fields:
   mk: |-
     [[[
 
-    const rpInks = (S, P) => Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i) && !isNaN(parseFloat(S[i].state))).map(i => { const f = S[i].attributes.friendly_name || i; const n = f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f).toLowerCase(); const col = /cyan|ciano/.test(k) ? '#00C8FF' : /magenta/.test(k) ? '#FF3DA6' : /yellow|giallo/.test(k) ? '#FFD60A' : /black|nero|matte|photo/.test(k) ? '#D9DEE8' : '#A78BFA'; const r = /black|nero/.test(k) ? 0 : /cyan/.test(k) ? 1 : /magenta/.test(k) ? 2 : /yellow/.test(k) ? 3 : 4; return {id: i, n, col, r, v: Math.max(0, Math.min(100, parseFloat(S[i].state)))}; }).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n));
-    const inks = rpInks(states, variables.prefix);
+    const rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\w*|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };
+    const inks = rpInks(states, variables.prefix, variables.inks);
     const s = states[variables.status]?.state || 'unavailable';
     const tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;   // the emptiest ink / toner
     const spenta = ['off', 'unavailable', 'unknown'].includes(s);
@@ -91,8 +103,8 @@ styles:
   - background: |-
       [[[
 
-      const rpInks = (S, P) => Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i) && !isNaN(parseFloat(S[i].state))).map(i => { const f = S[i].attributes.friendly_name || i; const n = f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f).toLowerCase(); const col = /cyan|ciano/.test(k) ? '#00C8FF' : /magenta/.test(k) ? '#FF3DA6' : /yellow|giallo/.test(k) ? '#FFD60A' : /black|nero|matte|photo/.test(k) ? '#D9DEE8' : '#A78BFA'; const r = /black|nero/.test(k) ? 0 : /cyan/.test(k) ? 1 : /magenta/.test(k) ? 2 : /yellow/.test(k) ? 3 : 4; return {id: i, n, col, r, v: Math.max(0, Math.min(100, parseFloat(S[i].state)))}; }).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n));
-      const inks = rpInks(states, variables.prefix);
+      const rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\w*|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };
+      const inks = rpInks(states, variables.prefix, variables.inks);
       const s = states[variables.status]?.state || 'unavailable';
       const tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;
       const spenta = ['off', 'unavailable', 'unknown'].includes(s);
@@ -104,8 +116,8 @@ styles:
   - box-shadow: |-
       [[[
 
-      const rpInks = (S, P) => Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i) && !isNaN(parseFloat(S[i].state))).map(i => { const f = S[i].attributes.friendly_name || i; const n = f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f).toLowerCase(); const col = /cyan|ciano/.test(k) ? '#00C8FF' : /magenta/.test(k) ? '#FF3DA6' : /yellow|giallo/.test(k) ? '#FFD60A' : /black|nero|matte|photo/.test(k) ? '#D9DEE8' : '#A78BFA'; const r = /black|nero/.test(k) ? 0 : /cyan/.test(k) ? 1 : /magenta/.test(k) ? 2 : /yellow/.test(k) ? 3 : 4; return {id: i, n, col, r, v: Math.max(0, Math.min(100, parseFloat(S[i].state)))}; }).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n));
-      const inks = rpInks(states, variables.prefix);
+      const rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\w*|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };
+      const inks = rpInks(states, variables.prefix, variables.inks);
       const s = states[variables.status]?.state || 'unavailable';
       const tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;
       const spenta = ['off', 'unavailable', 'unknown'].includes(s);
@@ -117,8 +129,8 @@ styles:
   - animation: |-
       [[[
 
-      const rpInks = (S, P) => Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i) && !isNaN(parseFloat(S[i].state))).map(i => { const f = S[i].attributes.friendly_name || i; const n = f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f).toLowerCase(); const col = /cyan|ciano/.test(k) ? '#00C8FF' : /magenta/.test(k) ? '#FF3DA6' : /yellow|giallo/.test(k) ? '#FFD60A' : /black|nero|matte|photo/.test(k) ? '#D9DEE8' : '#A78BFA'; const r = /black|nero/.test(k) ? 0 : /cyan/.test(k) ? 1 : /magenta/.test(k) ? 2 : /yellow/.test(k) ? 3 : 4; return {id: i, n, col, r, v: Math.max(0, Math.min(100, parseFloat(S[i].state)))}; }).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n));
-      const inks = rpInks(states, variables.prefix);
+      const rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\w*|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };
+      const inks = rpInks(states, variables.prefix, variables.inks);
       const s = states[variables.status]?.state || 'unavailable';
       const tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;
       const spenta = ['off', 'unavailable', 'unknown'].includes(s);
@@ -130,8 +142,8 @@ styles:
   - --kc: |-
       [[[
 
-      const rpInks = (S, P) => Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i) && !isNaN(parseFloat(S[i].state))).map(i => { const f = S[i].attributes.friendly_name || i; const n = f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f).toLowerCase(); const col = /cyan|ciano/.test(k) ? '#00C8FF' : /magenta/.test(k) ? '#FF3DA6' : /yellow|giallo/.test(k) ? '#FFD60A' : /black|nero|matte|photo/.test(k) ? '#D9DEE8' : '#A78BFA'; const r = /black|nero/.test(k) ? 0 : /cyan/.test(k) ? 1 : /magenta/.test(k) ? 2 : /yellow/.test(k) ? 3 : 4; return {id: i, n, col, r, v: Math.max(0, Math.min(100, parseFloat(S[i].state)))}; }).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n));
-      const inks = rpInks(states, variables.prefix);
+      const rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\w*|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };
+      const inks = rpInks(states, variables.prefix, variables.inks);
       const s = states[variables.status]?.state || 'unavailable';
       const tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;
       const spenta = ['off', 'unavailable', 'unknown'].includes(s);
@@ -170,6 +182,8 @@ double_tap_action:
         prefix: sensor.YOUR_PRINTER_
         status: sensor.YOUR_PRINTER_status
         name: My printer
+        style: bars   # bars | tubes
+        inks: []      # same list as the mini card (empty = automatic)
       show_name: false
       show_state: false
       show_icon: false
@@ -193,9 +207,9 @@ double_tap_action:
           const V = variables;
           window.__spPopRender = () => {
           const H = document.querySelector('home-assistant')?.hass?.states || {};
-          const rpInks = (S, P) => Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i) && !isNaN(parseFloat(S[i].state))).map(i => { const f = S[i].attributes.friendly_name || i; const n = f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f).toLowerCase(); const col = /cyan|ciano/.test(k) ? '#00C8FF' : /magenta/.test(k) ? '#FF3DA6' : /yellow|giallo/.test(k) ? '#FFD60A' : /black|nero|matte|photo/.test(k) ? '#D9DEE8' : '#A78BFA'; const r = /black|nero/.test(k) ? 0 : /cyan/.test(k) ? 1 : /magenta/.test(k) ? 2 : /yellow/.test(k) ? 3 : 4; return {id: i, n, col, r, v: Math.max(0, Math.min(100, parseFloat(S[i].state)))}; }).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n));
+          const rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\w*|waste)\b)/i, '').replace(/[\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };
           const P = V.prefix, sv = k => H[P + k]?.state;
-          const inks = rpInks(H, P);
+          const inks = rpInks(H, P, V.inks);
           const s = H[V.status]?.state || 'unavailable', tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;
           const spenta = ['off', 'unavailable', 'unknown'].includes(s), stampa = /print|process|busy|warm/i.test(s);
           const A = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : '#30D158';
@@ -207,6 +221,9 @@ double_tap_action:
           const lv = x => `<div class="ir ${x.v < 10 ? 'cr' : ''}"><span class="in">${x.n.replace(/</g, '&lt;')}</span>
             <div class="bar ik"><i style="width:${x.v}%;--a:${x.col}"></i></div>
             <b class="iv" style="color:${x.v < 10 ? '#FF3B30' : x.v < 25 ? '#FF9F0A' : '#fff'}">${Math.round(x.v)}%</b></div>`;
+          const tu = x => `<div class="tu ${x.v < 10 ? 'cr' : x.v < 25 ? 'lo' : ''}" style="--c:${x.col};--v:${x.v}">
+            <div class="tb"><div class="liq"><svg class="wv" viewBox="0 0 120 12" preserveAspectRatio="none"><path d="M0 6 Q7.5 1 15 6 T30 6 T45 6 T60 6 T75 6 T90 6 T105 6 T120 6 V12 H0 Z"/></svg></div><i class="gl"></i></div>
+            <b>${Math.round(x.v)}%</b><span>${x.n.replace(/\s*(ink|toner|cartridge|cartuccia)\s*$/i, '').replace(/</g, '&lt;')}</span></div>`;
           // extra tiles: only the ones your integration provides (HP Printer integration has all of them)
           const pr = parseFloat(sv('black_toner_remaining')), fatte = parseFloat(sv('black_toner_total_impression'));
           const prPct = H[P + 'black_toner_remaining']?.attributes?.unit_of_measurement === '%';   // pages or % (#6)
@@ -224,7 +241,7 @@ double_tap_action:
             <div class="t"><b>${String(V.name || 'My printer').replace(/</g, '&lt;')}</b><span>${txt}</span>
             <div style="margin-top:6px"><div class="pill" style="--p:${spenta ? '#8a94a8' : stampa ? '#00CFFF' : rs ? '#FFD60A' : '#30D158'}">${spenta ? 'OFF' : stampa ? 'PRINTING' : rs ? 'SLEEP' : 'READY'}</div></div></div></div>
             <div class="te" style="margin-top:12px"><small>${inks.length > 1 ? 'Ink / toner levels' : 'Ink / toner'}</small>
-            <div class="ik-l">${inks.map(lv).join('')}</div><i style="margin-top:6px;color:${tn < 25 ? A : '#aab4c8'}">${avv}</i></div>
+            ${V.style === 'tubes' ? `<div class="tu-g" style="grid-template-columns:repeat(${Math.min(inks.length, 8)},minmax(0,1fr))">${inks.map(tu).join('')}</div>` : `<div class="ik-l">${inks.map(lv).join('')}</div>`}<i style="margin-top:6px;color:${tn < 25 ? A : '#aab4c8'}">${avv}</i></div>
             ${tiles.length ? `<div class="tg">${tiles.map(t => `<div class="te"><small>${t[0]}</small><b>${t[1]}</b><i>${t[2]}</i></div>`).join('')}</div>` : ''}
             </div>
           </div>`;
@@ -260,7 +277,7 @@ double_tap_action:
           if (!window.__vivoIO && window.IntersectionObserver) window.__vivoIO = new IntersectionObserver(v => v.forEach(x => x.target.classList.toggle('vivo-fuori', !x.isIntersecting)), {threshold: 0});
           window.__spPopKey = () => {
             const H = document.querySelector('home-assistant')?.hass?.states || {};
-            if (!window.__spPopIds || Date.now() - window.__spPopIdsT > 60000) { window.__spPopIds = Object.keys(H).filter(i => i.startsWith(V.prefix) || i === V.status).sort(); window.__spPopIdsT = Date.now(); }
+            if (!window.__spPopIds || Date.now() - window.__spPopIdsT > 60000) { window.__spPopIds = Object.keys(H).filter(i => i.startsWith(V.prefix) || i === V.status || (V.inks || []).some(e => (e && e.entity || e) === i)).sort(); window.__spPopIdsT = Date.now(); }
             return window.__spPopIds.map(i => H[i] ? H[i].state + H[i].last_updated : '').join('|') + '';
           };
           if (!window.__spPopTimer) { let vuoto = 0; window.__spPopTimer = setInterval(() => {
@@ -320,6 +337,22 @@ double_tap_action:
         .ir .iv { font-size: 14px; font-weight: 800; text-align: right; }
         .ir.cr .iv, .ir.cr .bar.ik i { animation: pp_lamp .9s ease-in-out infinite; }
         @keyframes ik_in { from { width: 0; } }
+        .tu-g { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 8px; margin-top: 10px; }
+        .tu { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; text-align: center; }
+        .tu .tb { position: relative; width: 100%; max-width: 64px; height: 128px; border-radius: 12px 12px 24px 24px; overflow: hidden;
+                  background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 2px rgba(255,255,255,.22), 0 0 14px color-mix(in srgb, var(--c) 25%, transparent); }
+        .tu .liq { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--v) * 1%); transition: height 1s ease;
+                   background: linear-gradient(180deg, color-mix(in srgb, var(--c) 80%, #fff), var(--c)); animation: tu_in 1.4s ease-out; }
+        .tu .wv { position: absolute; left: 0; top: -9px; width: 200%; height: 10px; fill: color-mix(in srgb, var(--c) 80%, #fff); animation: tu_onda 2.6s linear infinite; }
+        .tu:nth-child(2n) .wv { animation-duration: 3.3s; } .tu:nth-child(3n) .wv { animation-duration: 2.1s; }
+        .tu .gl { position: absolute; left: 14%; top: 8px; bottom: 16px; width: 12%; border-radius: 6px; background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.05)); }
+        .tu b { font-size: 15px; font-weight: 800; color: #fff; } .tu span { display: block; width: 100%; white-space: normal; font-size: 10.5px; line-height: 1.2; color: #aab4c8; overflow-wrap: normal; word-break: normal; hyphens: none; text-transform: capitalize; }
+        .tu.lo b { color: #FF9F0A; } .tu.cr b { color: #FF3B30; }
+        .tu.cr .tb { animation: tu_allarme 1s ease-in-out infinite; }
+        @keyframes tu_onda { to { transform: translateX(-50%); } }
+        @keyframes tu_in { from { height: 0; } }
+        @keyframes tu_allarme { 50% { box-shadow: inset 0 0 0 2px #FF3B30, 0 0 16px #FF3B30aa; } }
+        @media (prefers-reduced-motion: reduce) { .tu *, .tu .tb { animation: none !important; } }
         @keyframes ik_luce { 60%, 100% { transform: translateX(100%); } }
         @keyframes pp_lamp { 50% { opacity: .35; } }
         @media (prefers-reduced-motion: reduce) { .ir *, .ir *::after { animation: none !important; } }
