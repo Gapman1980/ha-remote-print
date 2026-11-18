@@ -173,6 +173,8 @@ double_tap_action:
           const spenta = ['off', 'unavailable', 'unknown'].includes(s), stampa = /print|process|busy|warm/i.test(s);
           const A = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : '#30D158';
           const pr = parseFloat(sv('black_toner_remaining')), fatte = parseFloat(sv('black_toner_total_impression'));
+          // some printers report the remaining toner in pages, others in % (#6): follow the sensor unit
+          const prPct = H[P + 'black_toner_remaining']?.attributes?.unit_of_measurement === '%';
           const fab = Date.parse(sv('black_toner_manufacture_date'));
           const rs = /powersave|sleep/i.test(s);
           const txt = spenta ? 'Off' : stampa ? 'Printing…' : rs ? 'Power saving: wakes up by itself' : 'Ready to print';
@@ -184,7 +186,7 @@ double_tap_action:
             <div class="te" style="margin-top:12px"><small>Black toner</small><b style="--t:var(--a)">${isNaN(tn) ? '—' : Math.round(tn) + '%'}</b>
             <div class="bar" style="height:12px;border-radius:6px"><i style="width:${isNaN(tn) ? 0 : tn}%"></i></div><i style="margin-top:4px">${avv}</i></div>
             <div class="tg">
-              <div class="te"><small>Pages left</small><b>${isNaN(pr) ? '—' : '~' + pr}</b><i>toner estimate</i></div>
+              <div class="te"><small>Pages left</small><b>${isNaN(pr) ? '—' : prPct ? Math.round(pr) + '%' : '~' + pr}</b><i>toner estimate</i></div>
               <div class="te"><small>Printed</small><b>${isNaN(fatte) ? '—' : fatte}</b><i>with this toner</i></div>
               <div class="te"><small>Scans</small><b>${sv('scanner_total_pages_from_scanner_glass') ?? '—'}</b><i>from the glass</i></div>
               <div class="te"><small>Misfeeds</small><b>${sv('printer_total_miss_picks') ?? '—'}</b><i>sheets not picked</i></div>
