@@ -14,6 +14,15 @@ else
 fi
 # Forgive common typing mistakes in the UI fields: "printer_uri: socket://..." (label typed too), quotes, spaces
 URI=$(jq -r "${SEL}.printer_uri // empty" $OPT | sed -E 's/^[[:space:]]*[Pp][Rr][Ii][Nn][Tt][Ee][Rr]_?[Uu][Rr][Ii][[:space:]]*:[[:space:]]*//' | tr -d "\"' ")
+# 1.6.1: port 9100 is the raw "socket" (JetDirect) port: whatever arrives there is printed as text, so http://, ipp://
+# or no scheme on :9100 printed the request itself ("POST / HTTP/1.1" ...) (#10). Use socket://host:9100 instead.
+case "$URI" in
+  socket://*) ;;
+  *:9100|*:9100/|*:9100/*)
+    H=$(echo "$URI" | sed -E 's#^[A-Za-z]+://##; s#/.*$##')
+    echo "[$Q] Port 9100 is the printer's raw port: using socket://$H instead of $URI"
+    URI="socket://$H" ;;
+esac
 DRIVER=$(jq -r "${SEL}.driver // \"driverless\"" $OPT)
 MODEL=$(jq -r "${SEL}.brother_model // \"DCP-1600\"" $OPT | sed -E 's/^[[:space:]]*[Bb][Rr][Oo][Tt][Hh][Ee][Rr]_?[Mm][Oo][Dd][Ee][Ll][[:space:]]*:[[:space:]]*//' | tr -d "\"'" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
 echo "[$Q] Printer URI: $URI"

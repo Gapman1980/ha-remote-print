@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.1
+- **`http://…:9100` is now fixed automatically** ([#10](https://github.com/Gapman1980/ha-remote-print/issues/10)): port 9100 is the
+  printer's raw port, which prints whatever it receives as text. With `http://`, `ipp://` or no scheme on that port the
+  printer printed the request itself (`POST / HTTP/1.1`, `content-length` …). The add-on now uses `socket://host:9100`
+  and says so in the Log. Other ports and URIs are untouched.
+
 ## 1.6.0
 - **URF (AirPrint raster) printers get the same header macOS sends** ([#2](https://github.com/Gapman1980/ha-remote-print/issues/2)): CUPS writes
   page count 0 ("unknown") and a one-sided flag of 1, Apple writes the real number of pages and 0. Some printers
