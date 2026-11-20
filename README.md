@@ -17,7 +17,7 @@ Upload a file from your phone — even when you are away from home — and your 
 
 ## What it does
 
-- A page inside Home Assistant (sidebar entry **Print**): pick a file, choose copies, two-sided, fit to page, page ranges, tap **PRINT AT HOME**.
+- A page inside Home Assistant (sidebar entry **Print**): pick a file, choose copies, two-sided, black & white, fit to page, page ranges, tap **PRINT AT HOME**.
 - Works from anywhere Home Assistant works (Nabu Casa, VPN, reverse proxy…): the file travels through Home Assistant **ingress**, nothing is exposed to the internet.
 - Accepts **PDF, photos (JPG, PNG, HEIC from iPhone) and text**. Word/Excel: export them to PDF on the phone first.
 - Live list of recent prints (*Queued → Printing… → Printed ✓*), cancel button, printer alerts (out of paper, toner low, door open).
@@ -94,6 +94,7 @@ Tried another printer? Tell us in an [issue](https://github.com/Gapman1980/ha-re
 | `brother_model` | `DCP-1600` | brlaser only: part of the model name |
 | `paper` | `A4` | A4, A5, Letter, Legal |
 | `duplex_default` | `false` | "Two-sided" switch starts on |
+| `bw_default` | `false` | "Black & white" switch starts on |
 | `keep_days` | `3` | uploaded files are deleted after N days |
 | `language` | `auto` | `auto` (phone language), `en`, `it` |
 | `lan_access` | `false` | also open the page directly from the local network (see below) |

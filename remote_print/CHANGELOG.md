@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.0
+- **Black & white switch** on the page (suggested on Facebook): prints without colour ink. The file is turned into shades
+  of grey before printing (Ghostscript) and the printer is also asked for monochrome (`print-color-mode`), so it works
+  even with printers that ignore that option. The preview turns grey too, and the job list shows ⚫ B&W.
+- Printers that are black & white only (read from their driver) get the switch already on and locked, with a short note.
+- New option `bw_default`: the switch starts on (handy if you mostly print documents).
+
 ## 1.6.1
 - **`http://…:9100` is now fixed automatically** ([#10](https://github.com/Gapman1980/ha-remote-print/issues/10)): port 9100 is the
   printer's raw port, which prints whatever it receives as text. With `http://`, `ipp://` or no scheme on that port the

@@ -20,6 +20,9 @@ configuration:
   duplex_default:
     name: Fronte/retro predefinito
     description: L'interruttore 'Fronte/retro' della pagina parte già acceso.
+  bw_default:
+    name: Bianco e nero predefinito
+    description: "L'interruttore 'Bianco e nero' della pagina parte già acceso (comodo se stampi quasi sempre documenti)."
   keep_days:
     name: Conserva i file caricati (giorni)
     description: I file caricati vengono cancellati dopo questi giorni.

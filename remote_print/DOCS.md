@@ -16,6 +16,7 @@ Upload a file from your phone (even away from home) and your network printer pri
   If nothing matches, the log lists the available models.
 - **paper**: A4, A5, Letter or Legal.
 - **duplex_default**: the "two-sided" switch starts on.
+- **bw_default**: the "black & white" switch starts on (black & white only printers always have it on).
 - **keep_days**: uploaded files are deleted after this many days.
 - **language**: `auto` (phone language), `en` or `it`.
 - **allowed_users** (optional, 1.5.0): Home Assistant usernames that may print without being administrators (see Notes).
@@ -41,7 +42,7 @@ After saving, start the add-on and turn on **Show in sidebar**. The log must say
 
 ## Use
 
-Open **Print** from the sidebar → tap to choose a file (PDF, JPG, PNG, HEIC, TXT) → copies / two-sided / fit / pages →
+Open **Print** from the sidebar → tap to choose a file (PDF, JPG, PNG, HEIC, TXT) → copies / two-sided / black & white / fit / pages →
 **PRINT AT HOME**. The list below shows the state of the last 15 jobs; ✕ cancels a queued job, 🗑 removes a finished
 job from the list and **Clear** (tap twice) empties it.
 

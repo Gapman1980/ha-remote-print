@@ -20,6 +20,9 @@ configuration:
   duplex_default:
     name: Two-sided by default
     description: The 'two-sided' switch on the page starts turned on.
+  bw_default:
+    name: Black & white by default
+    description: "The 'Black & white' switch on the page starts turned on (handy if you mostly print documents)."
   keep_days:
     name: Keep uploaded files (days)
     description: Uploaded files are deleted after this many days.

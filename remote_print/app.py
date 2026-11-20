@@ -71,7 +71,7 @@ for i, p in enumerate(OPT.get("other_printers") or [], start=2):
                      "driver": p.get("driver", "driverless"), "model": clean_model(p.get("brother_model"))})
 QUEUE_RE = r"(RemotePrint\d*)-(\d+)"
 CONFIG_JS = json.dumps({"lang": OPT.get("language", "auto"), "paper": OPT.get("paper", "A4"),
-                        "duplex": bool(OPT.get("duplex_default", False)), "printers": [p["name"] for p in PRINTERS]})
+                        "duplex": bool(OPT.get("duplex_default", False)), "bw": bool(OPT.get("bw_default", False)), "printers": [p["name"] for p in PRINTERS]})
 
 
 def printer(i):
@@ -298,15 +298,23 @@ def paper_info(queue):
     """Paper size (points, portrait) and the printer's unprintable margins read from its PPD (*ImageableArea)."""
     W, H = PAPER_PT[PAPER_NAME]
     mg = {"l": 12.0, "b": 12.0, "r": 12.0, "t": 12.0}
+    color = None   # 1.7.0: True / False from the PPD (*ColorDevice), None = queue not created yet
     try:
         txt = open(f"/etc/cups/ppd/{queue}.ppd", errors="replace").read()
+        c = re.search(r"^\*ColorDevice:\s*(\w+)", txt, re.M)
+        if c:
+            color = c.group(1).lower() == "true"
+        else:   # no *ColorDevice line: colour if the PPD offers any ColorModel besides grey ones
+            cm = re.findall(r"^\*ColorModel (\w+)", txt, re.M)
+            if cm:
+                color = any(x.lower() not in ("gray", "grayscale", "black", "kgray", "mono", "monochrome") for x in cm)
         a = re.search(rf'^\*ImageableArea {re.escape(PAPER_NAME)}[/:][^"\n]*"\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)', txt, re.M)
         if a:
             l, b, r, t = map(float, a.groups())
             mg = {"l": l, "b": b, "r": max(W - r, 0), "t": max(H - t, 0)}
     except Exception:
         pass
-    return {"paper": [W, H], "margins": mg, "name": PAPER_NAME}
+    return {"paper": [W, H], "margins": mg, "name": PAPER_NAME, "color": color}
 
 
 def pdf_info(path):
@@ -413,6 +421,18 @@ async def paper(request):
     return web.json_response(paper_info(pr["queue"]))
 
 
+async def to_gray(path):
+    """1.7.0: black & white. Ghostscript rewrites the PDF in shades of grey, so it works even with printers that
+    ignore print-color-mode. If the conversion fails the original is printed (with the printer option only)."""
+    out = path[:-4] + "_bw.pdf"
+    rc, msg = await run("gs", "-q", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=pdfwrite", "-sColorConversionStrategy=Gray",
+                        "-dProcessColorModel=/DeviceGray", "-dAutoRotatePages=/None", f"-sOutputFile={out}", path, timeout=180)
+    if rc != 0 or not os.path.isfile(out) or os.path.getsize(out) == 0:
+        print(f"Black & white conversion failed, printing the original with the printer option only: {msg.strip()[-200:]}", flush=True)
+        return path
+    return out
+
+
 async def print_file(request):
     cleanup_uploads()
     fields, name, path, bad = await read_upload(request)
@@ -435,6 +455,9 @@ async def print_file(request):
         except Exception as e:   # layout failed: print as before (fit to page)
             print(f"Layout failed, printing without it: {e}", flush=True)
             lay = None
+    bw = fields.get("bw") == "1"
+    if bw and path.lower().endswith(".pdf"):
+        path = await to_gray(path)
     idx, pr = printer(fields.get("printer", "0"))
     ok, err = await ensure_queue(idx)
     if not ok:
@@ -445,6 +468,8 @@ async def print_file(request):
     copies = max(1, min(20, int(fields.get("copies", "1") or 1)))
     opts = ["-d", pr["queue"], "-n", str(copies), "-t", name[:60], "-o", f"media={MEDIA}"]
     opts += ["-o", "sides=two-sided-long-edge" if fields.get("duplex") == "1" else "sides=one-sided"]
+    if bw:   # 1.7.0: also ask the printer itself (IPP print-color-mode, PPD ColorModel); ignored by black & white printers
+        opts += ["-o", "print-color-mode=monochrome", "-o", "ColorModel=Gray"]
     if lay:   # the sheet is already laid out exactly as in the preview: no extra scaling
         opts += ["-o", "print-scaling=none"]
     elif fields.get("fit", "1") == "1":
@@ -461,7 +486,7 @@ async def print_file(request):
     for j in jobs_:
         if j["id"] == jid:
             j["closed"] = True
-    jobs_.append({"id": jid, "name": name, "copies": copies, "time": time.time(), "canceled": False, "printer": pr["name"],
+    jobs_.append({"id": jid, "name": name, "copies": copies, "time": time.time(), "canceled": False, "printer": pr["name"], "bw": bw,
                   "by": request.get("user", "")})
     write_jobs(jobs_)
     return web.json_response({"ok": True, "id": jid})
