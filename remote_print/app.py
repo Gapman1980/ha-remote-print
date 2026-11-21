@@ -678,6 +678,10 @@ def ha_supplies(ids):
     return res
 
 
+def _has_levels(res):
+    return any(isinstance(s.get("level"), int) for s in res or [])
+
+
 async def ink(request):
     idx, pr = printer(request.query.get("printer", "0"))
     hit = INK_CACHE.get(idx)
@@ -686,6 +690,7 @@ async def ink(request):
     ids = sensor_list(pr.get("sensors"))
     if ids:
         res = await asyncio.get_running_loop().run_in_executor(None, ha_supplies, ids)
+        print(f"[ink] sensors: " + ", ".join(f"{s['name']}={s['level']}" for s in res), flush=True)
         INK_CACHE[idx] = (time.time(), res)
         return web.json_response({"supplies": res, "sensors": True})
     _, v = await run("lpstat", "-v", pr["queue"], timeout=10)
@@ -694,17 +699,27 @@ async def ink(request):
     tries = []
     if dev.startswith(("ipp://", "ipps://")):
         tries.append(dev)
-    elif host_of(dev):
-        tries += [f"ipp://{host_of(dev)}:631/ipp/print", f"ipp://{host_of(dev)}:631/ipp"]
+    h = host_of(dev)
+    if h and not h.startswith("localhost"):
+        tries += [f"ipp://{h}:631/ipp/print", f"ipps://{h}:631/ipp/print", f"ipp://{h}:631/ipp"]
     tries.append(f"ipp://localhost:631/printers/{pr['queue']}")   # CUPS' copy (filled while printing)
-    res = []
-    for uri in tries:
+    # 1.8.4: a source that gives the cartridge names but no levels (e.g. CUPS' copy before the first job) is kept only
+    # as a last resort: the other addresses are tried first, so the real percentages win.
+    res, best = [], []
+    for uri in dict.fromkeys(tries):
         try:
-            res = await asyncio.get_running_loop().run_in_executor(None, _ipp_ask, uri)
-        except Exception:
-            res = []
-        if res:
+            got = await asyncio.get_running_loop().run_in_executor(None, _ipp_ask, uri)
+        except Exception as e:
+            print(f"[ink] {uri}: {e.__class__.__name__}", flush=True)
+            got = []
+        if got and _has_levels(got):
+            res = got
+            print(f"[ink] {uri}: " + ", ".join(f"{s['name']}={s['level']}" for s in got), flush=True)
             break
+        if got and not best:
+            best = got
+            print(f"[ink] {uri}: names but no levels", flush=True)
+    res = res or best
     INK_CACHE[idx] = (time.time(), res)
     return web.json_response({"supplies": res, "sensors": False})
 

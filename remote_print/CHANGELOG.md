@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.4
+- **Ink levels: fixed tubes that stayed empty with no percentage** (thanks @Eugenio-1204). Some printers answer through CUPS with
+  the cartridge names but no levels: the add-on now tries the printer itself first (also `ipps://`) and uses a names-only answer
+  only as a last resort. In that case the tubes stay empty with a `?` and the box says to set `ink_sensors`.
+- The Log now shows where the levels come from (`[ink] …`), to help when they do not appear.
+
 ## 1.8.3
 - **The ink in the glass tubes really moves** (`ink_style: tubes`): two waves on the surface going opposite ways, the liquid
   sloshing from side to side and small bubbles rising inside.
