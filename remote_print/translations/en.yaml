@@ -38,5 +38,8 @@ configuration:
   ink_sensors:
     name: Ink sensors (optional)
     description: "Only if the page does not show the levels by itself: the Home Assistant sensors with the percentage of each cartridge or toner, e.g. sensor.printer_black_ink. The bar colour is taken from the name (black, cyan, magenta, yellow). For other printers: ink_sensors with the names separated by commas."
+  ink_style:
+    name: Ink levels style
+    description: "bars = horizontal bars; tubes = one glass tube per cartridge with a moving liquid."
 network:
   8099/tcp: "Direct access port (only with lan_access on). Empty = disabled."

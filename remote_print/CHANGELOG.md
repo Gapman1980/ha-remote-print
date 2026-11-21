@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.2
+- **Glass tubes** for the ink levels (suggested by @Eugenio-1204): new option `ink_style: tubes` shows one glass tube per
+  cartridge with a moving liquid, the percentage and the name under it. `bars` (default) keeps the horizontal bars.
+- **Better colours from sensor names**, also in Italian: *azzurro* = cyan, *chiaro* / *light* / *photo* variants in a lighter
+  tint (light cyan, light magenta), photo black, red, blue, green. Black shows as dark grey inside the tubes so it stays visible.
+
 ## 1.8.1
 - **Ink levels from Home Assistant sensors** ([#11](https://github.com/Gapman1980/ha-remote-print/issues/11)): some printers do not
   answer the IPP question, so the box stayed hidden. New option `ink_sensors`: list the sensors Home Assistant already has for the

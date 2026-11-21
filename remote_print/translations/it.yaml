@@ -38,5 +38,8 @@ configuration:
   ink_sensors:
     name: Sensori inchiostro (facoltativo)
     description: "Solo se la pagina non mostra i livelli da sola: i sensori di Home Assistant con la percentuale di ogni cartuccia o toner, es. sensor.stampante_black_ink. Il colore della barra si capisce dal nome (black/nero, cyan, magenta, yellow/giallo). Per le altre stampanti: ink_sensors con i nomi separati da virgola."
+  ink_style:
+    name: Stile livelli inchiostro
+    description: "bars = barre orizzontali; tubes = una provetta di vetro per cartuccia con il liquido che ondeggia."
 network:
   8099/tcp: "Porta per l accesso diretto (solo con lan_access acceso). Vuota = disattivata."

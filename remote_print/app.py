@@ -78,7 +78,7 @@ for i, p in enumerate(OPT.get("other_printers") or [], start=2):
                      "sensors": p.get("ink_sensors") or ""})
 QUEUE_RE = r"(RemotePrint\d*)-(\d+)"
 CONFIG_JS = json.dumps({"lang": OPT.get("language", "auto"), "paper": OPT.get("paper", "A4"),
-                        "duplex": bool(OPT.get("duplex_default", False)), "bw": bool(OPT.get("bw_default", False)), "printers": [p["name"] for p in PRINTERS]})
+                        "duplex": bool(OPT.get("duplex_default", False)), "bw": bool(OPT.get("bw_default", False)), "inkStyle": OPT.get("ink_style", "bars"), "printers": [p["name"] for p in PRINTERS]})
 
 
 def printer(i):
@@ -620,9 +620,16 @@ def _ipp_ask(uri):
 # ---------- 1.8.1: ink levels from Home Assistant sensors (#11) ----------
 # Some printers do not answer the IPP question, but Home Assistant already has their levels (IPP, Brother, HP, Epson ...
 # integrations). ink_sensors lists those entities (sensor.xxx_black_ink ...); when set they are used instead of IPP.
-COLOURS = [(r"black|nero|schwarz|noir|negro|\bbk\b|pgbk|_k$", "#000000"), (r"cyan|ciano|\bc$", "#00AEEF"),
-           (r"magenta|\bm$", "#EC008C"), (r"yellow|giallo|gelb|jaune|amarillo|\by$", "#FFE600"),
-           (r"tri.?col|colou?r|colore|farbe|cmy", "#B07CFF"), (r"photo|foto|grey|gray|grigio", "#9E9E9E")]
+COLOURS = [  # first match wins: light / photo variants before the plain colours
+    (r"photo.?black|foto.?nero|nero.?foto|\bpk\b|\bpbk\b", "#3A3A3A"),
+    (r"(light|photo|chiar|hell|clair|claro).{0,12}(cyan|ciano|azzurr|cian)|(cyan|ciano|azzurr|cian).{0,12}(light|chiar|hell|clair|claro)|\blc\b",
+     "#8FEFFF"),
+    (r"(light|photo|chiar|hell|clair|claro).{0,12}magenta|magenta.{0,12}(light|chiar|hell|clair|claro)|\blm\b", "#F5A0FF"),
+    (r"black|nero|schwarz|noir|negro|\bbk\b|pgbk|_k$", "#000000"),
+    (r"cyan|ciano|azzurr|cian|\bc$", "#00AEEF"), (r"magenta|\bm$", "#EC008C"),
+    (r"yellow|giallo|gelb|jaune|amarillo|\by$", "#FFE600"), (r"red|rosso|\br$", "#FF3B30"), (r"blue|blu\b", "#2962FF"),
+    (r"green|verde", "#00C853"), (r"tri.?col|colou?r|colore|farbe|cmy", "#B07CFF"),
+    (r"grey|gray|grigio", "#9E9E9E")]
 
 
 def sensor_list(v):

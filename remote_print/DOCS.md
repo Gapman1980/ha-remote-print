@@ -77,3 +77,5 @@ ink_sensors:
 
 The colour of each bar comes from the sensor name (black/nero, cyan, magenta, yellow/giallo, tri-color).
 For a printer in `other_printers` write them on one line: `ink_sensors: "sensor.a, sensor.b"`.
+
+`ink_style: tubes` shows the levels as glass tubes (one per cartridge, with a moving liquid) instead of bars.
