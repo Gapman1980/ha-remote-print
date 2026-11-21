@@ -35,5 +35,8 @@ configuration:
   allowed_users:
     name: Utenti non amministratori ammessi
     description: "Nomi utente di Home Assistant (es. alisha) che possono usare la stampa anche senza essere amministratori. Gli amministratori entrano sempre; lista vuota = solo amministratori."
+  ink_sensors:
+    name: Sensori inchiostro (facoltativo)
+    description: "Solo se la pagina non mostra i livelli da sola: i sensori di Home Assistant con la percentuale di ogni cartuccia o toner, es. sensor.stampante_black_ink. Il colore della barra si capisce dal nome (black/nero, cyan, magenta, yellow/giallo). Per le altre stampanti: ink_sensors con i nomi separati da virgola."
 network:
   8099/tcp: "Porta per l accesso diretto (solo con lan_access acceso). Vuota = disattivata."

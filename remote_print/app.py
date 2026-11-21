@@ -13,6 +13,7 @@ import json
 import os
 import re
 import time
+import urllib.request
 
 from aiohttp import web
 from urllib.parse import urlsplit
@@ -69,10 +70,12 @@ def host_of(uri):
 
 # 1.3.0: main printer (top-level options, queue RemotePrint) + optional other_printers (queues RemotePrint2, 3 ...)
 PRINTERS = [{"queue": "RemotePrint", "name": (OPT.get("printer_name") or "").strip() or host_of(OPT.get("printer_uri")) or "Printer",
-             "driver": OPT.get("driver", "driverless"), "model": clean_model(OPT.get("brother_model"))}]
+             "driver": OPT.get("driver", "driverless"), "model": clean_model(OPT.get("brother_model")),
+             "sensors": OPT.get("ink_sensors") or []}]
 for i, p in enumerate(OPT.get("other_printers") or [], start=2):
     PRINTERS.append({"queue": f"RemotePrint{i}", "name": (p.get("name") or "").strip() or host_of(p.get("printer_uri")) or f"Printer {i}",
-                     "driver": p.get("driver", "driverless"), "model": clean_model(p.get("brother_model"))})
+                     "driver": p.get("driver", "driverless"), "model": clean_model(p.get("brother_model")),
+                     "sensors": p.get("ink_sensors") or ""})
 QUEUE_RE = r"(RemotePrint\d*)-(\d+)"
 CONFIG_JS = json.dumps({"lang": OPT.get("language", "auto"), "paper": OPT.get("paper", "A4"),
                         "duplex": bool(OPT.get("duplex_default", False)), "bw": bool(OPT.get("bw_default", False)), "printers": [p["name"] for p in PRINTERS]})
@@ -614,11 +617,70 @@ def _ipp_ask(uri):
     return res
 
 
+# ---------- 1.8.1: ink levels from Home Assistant sensors (#11) ----------
+# Some printers do not answer the IPP question, but Home Assistant already has their levels (IPP, Brother, HP, Epson ...
+# integrations). ink_sensors lists those entities (sensor.xxx_black_ink ...); when set they are used instead of IPP.
+COLOURS = [(r"black|nero|schwarz|noir|negro|\bbk\b|pgbk|_k$", "#000000"), (r"cyan|ciano|\bc$", "#00AEEF"),
+           (r"magenta|\bm$", "#EC008C"), (r"yellow|giallo|gelb|jaune|amarillo|\by$", "#FFE600"),
+           (r"tri.?col|colou?r|colore|farbe|cmy", "#B07CFF"), (r"photo|foto|grey|gray|grigio", "#9E9E9E")]
+
+
+def sensor_list(v):
+    if isinstance(v, str):
+        v = v.split(",")
+    out = []
+    for x in v or []:
+        out += [s.strip() for s in str(x).split(",") if s.strip()]
+    return out
+
+
+def _ha_state(eid):
+    req = urllib.request.Request(f"http://supervisor/core/api/states/{eid}",
+                                 headers={"Authorization": "Bearer " + os.environ.get("SUPERVISOR_TOKEN", "")})
+    with urllib.request.urlopen(req, timeout=6) as r:
+        return json.load(r)
+
+
+def ha_supplies(ids):
+    res = []
+    for eid in ids:
+        try:
+            s = _ha_state(eid)
+        except Exception as e:
+            print(f"[ink] {eid}: not readable ({e})", flush=True)
+            continue
+        at = s.get("attributes", {})
+        name = str(at.get("friendly_name") or eid)
+        try:
+            lv = max(0, min(100, round(float(s.get("state")))))
+        except (TypeError, ValueError):
+            lv = None
+        key = (eid + " " + name).lower()
+        col = next((c for rx, c in COLOURS if re.search(rx, key)), "#888888")
+        res.append({"name": name, "level": lv, "color": col, "type": "sensor", "low": 10})
+    # drop the part of the name all sensors share (usually the printer name), keep it readable
+    if len(res) > 1:
+        pre = os.path.commonprefix([r["name"] for r in res])
+        pre = pre[:pre.rfind(" ") + 1] if " " in pre else ""
+        if pre:
+            for r in res:
+                r["name"] = r["name"][len(pre):].strip() or r["name"]
+    for r in res:   # "HP LaserJet M234dw (192.168.1.60) Black Toner Level" -> "Black Toner"
+        n = re.sub(r"^.*\)\s+", "", r["name"]) or r["name"]
+        r["name"] = re.sub(r"\s+(level|livello|remaining|rimanente|residuo)$", "", n, flags=re.I) or n
+    return res
+
+
 async def ink(request):
     idx, pr = printer(request.query.get("printer", "0"))
     hit = INK_CACHE.get(idx)
     if hit and time.time() - hit[0] < 120:
-        return web.json_response({"supplies": hit[1]})
+        return web.json_response({"supplies": hit[1], "sensors": bool(sensor_list(pr.get("sensors")))})
+    ids = sensor_list(pr.get("sensors"))
+    if ids:
+        res = await asyncio.get_running_loop().run_in_executor(None, ha_supplies, ids)
+        INK_CACHE[idx] = (time.time(), res)
+        return web.json_response({"supplies": res, "sensors": True})
     _, v = await run("lpstat", "-v", pr["queue"], timeout=10)
     m = re.search(r":\s*(\S+://\S+)", v)
     dev = m.group(1) if m else ""
@@ -637,7 +699,7 @@ async def ink(request):
         if res:
             break
     INK_CACHE[idx] = (time.time(), res)
-    return web.json_response({"supplies": res})
+    return web.json_response({"supplies": res, "sensors": False})
 
 
 app = web.Application(middlewares=[ingress_only], client_max_size=80 * 1024 * 1024)

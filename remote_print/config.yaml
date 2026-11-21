@@ -1,5 +1,5 @@
 name: Remote Print
-version: "1.8.0"
+version: "1.8.1"
 slug: remote_print
 description: Upload a file from your phone (even away from home) and print it on your network printer. Driverless CUPS (IPP Everywhere / AirPrint), plus brlaser for Brother lasers without AirPrint.
 url: https://github.com/Gapman1980/ha-remote-print
@@ -13,6 +13,7 @@ init: false
 ingress: true
 ingress_port: 8099
 hassio_api: true
+homeassistant_api: true
 panel_icon: mdi:printer-wireless
 panel_title: Print
 panel_admin: false
@@ -32,6 +33,7 @@ options:
   lan_access: false
   other_printers: []
   allowed_users: []
+  ink_sensors: []
 schema:
   printer_name: str?
   printer_uri: str
@@ -42,6 +44,7 @@ schema:
       printer_uri: str
       driver: list(driverless|brlaser)?
       brother_model: str?
+      ink_sensors: str?
   paper: list(A4|A5|Letter|Legal)
   duplex_default: bool
   bw_default: bool
@@ -49,4 +52,6 @@ schema:
   language: list(auto|en|it)
   lan_access: bool
   allowed_users:
+    - str
+  ink_sensors:
     - str

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.1
+- **Ink levels from Home Assistant sensors** ([#11](https://github.com/Gapman1980/ha-remote-print/issues/11)): some printers do not
+  answer the IPP question, so the box stayed hidden. New option `ink_sensors`: list the sensors Home Assistant already has for the
+  printer (IPP, Brother, HP, Epson ... integrations, e.g. `sensor.printer_black_ink`) and the page shows those, with the bar colour
+  taken from the name. For `other_printers` use `ink_sensors: "sensor.a, sensor.b"`.
+- When no level is available the box no longer disappears: it says so and points to `ink_sensors`.
+- The add-on now asks for Home Assistant API access (`homeassistant_api`), read-only use: only the listed sensors are read.
+
 ## 1.8.0
 - **Ink and toner levels on the page** ([#11](https://github.com/Gapman1980/ha-remote-print/issues/11)): under the printer choice a new box shows one
   animated bar per cartridge (black, cyan, magenta, yellow, or the toner of a laser) with its percentage, coloured like the ink.

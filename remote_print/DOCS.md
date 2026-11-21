@@ -62,4 +62,18 @@ The log also prints the **Ingress URL** used by the dashboard popup example (see
 - Files never leave your home network: they go phone → Home Assistant → printer.
 
 ## Ink and toner levels
-The page shows the level of every cartridge (or the laser toner) under the printer choice. The add-on asks the printer with a read-only IPP request; if your printer does not report levels the box is simply not shown.
+The page shows the level of every cartridge (or the laser toner) under the printer choice. The add-on asks the printer with a read-only IPP request; if your printer does not report levels the box says so.
+
+If your printer does not report them, but Home Assistant has sensors
+for its cartridges (for example from the IPP, Brother, HP or Epson integration), list them in `ink_sensors`:
+
+```yaml
+ink_sensors:
+  - sensor.printer_black_ink
+  - sensor.printer_cyan_ink
+  - sensor.printer_magenta_ink
+  - sensor.printer_yellow_ink
+```
+
+The colour of each bar comes from the sensor name (black/nero, cyan, magenta, yellow/giallo, tri-color).
+For a printer in `other_printers` write them on one line: `ink_sensors: "sensor.a, sensor.b"`.

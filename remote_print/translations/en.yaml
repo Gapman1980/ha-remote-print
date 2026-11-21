@@ -35,5 +35,8 @@ configuration:
   allowed_users:
     name: Allowed non-admin users
     description: "Home Assistant usernames (e.g. alisha) that can use Remote Print without being administrators. Administrators can always use it; empty list = administrators only."
+  ink_sensors:
+    name: Ink sensors (optional)
+    description: "Only if the page does not show the levels by itself: the Home Assistant sensors with the percentage of each cartridge or toner, e.g. sensor.printer_black_ink. The bar colour is taken from the name (black, cyan, magenta, yellow). For other printers: ink_sensors with the names separated by commas."
 network:
   8099/tcp: "Direct access port (only with lan_access on). Empty = disabled."
