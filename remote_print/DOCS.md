@@ -60,3 +60,6 @@ The log also prints the **Ingress URL** used by the dashboard popup example (see
 - Alternative for the local network only: turn on `lan_access`, set a port in **Network**, restart, then use a Webpage card with `http://HOME-ASSISTANT-IP:PORT/` (no password: anyone on your Wi-Fi can print; never forward the port; needs Home Assistant opened over `http://`).
 - With `brlaser` the printer does not report paper/toner state (no IPP), so alerts are not shown.
 - Files never leave your home network: they go phone → Home Assistant → printer.
+
+## Ink and toner levels
+The page shows the level of every cartridge (or the laser toner) under the printer choice. The add-on asks the printer with a read-only IPP request; if your printer does not report levels the box is simply not shown.

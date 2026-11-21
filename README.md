@@ -18,6 +18,7 @@ Upload a file from your phone — even when you are away from home — and your 
 ## What it does
 
 - A page inside Home Assistant (sidebar entry **Print**): pick a file, choose copies, two-sided, black & white, fit to page, page ranges, tap **PRINT AT HOME**.
+- **Ink and toner levels** right on the page (one coloured bar per cartridge, read from the printer, nothing to set up).
 - Works from anywhere Home Assistant works (Nabu Casa, VPN, reverse proxy…): the file travels through Home Assistant **ingress**, nothing is exposed to the internet.
 - Accepts **PDF, photos (JPG, PNG, HEIC from iPhone) and text**. Word/Excel: export them to PDF on the phone first.
 - Live list of recent prints (*Queued → Printing… → Printed ✓*), cancel button, printer alerts (out of paper, toner low, door open).

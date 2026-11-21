@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.0
+- **Ink and toner levels on the page** ([#11](https://github.com/Gapman1980/ha-remote-print/issues/11)): under the printer choice a new box shows one
+  animated bar per cartridge (black, cyan, magenta, yellow, or the toner of a laser) with its percentage, coloured like the ink.
+  Orange with "running low" near the printer's own low mark, red and blinking when it is empty.
+- The levels are read from the printer itself with a read-only IPP request (`marker-levels`, the same data the printer's web page shows):
+  nothing is printed and nothing to configure. Works with driverless/AirPrint printers; for `socket://` queues the add-on tries IPP
+  on the same address, otherwise it uses the copy CUPS keeps while printing. If the printer does not report levels, the box stays hidden.
+- Refreshed when the page opens, when you switch printer and every 5 minutes. Thanks @Eugenio-1204 for the idea.
+
 ## 1.7.0
 - **Black & white switch** on the page (suggested on Facebook): prints without colour ink. The file is turned into shades
   of grey before printing (Ghostscript) and the printer is also asked for monochrome (`print-color-mode`), so it works

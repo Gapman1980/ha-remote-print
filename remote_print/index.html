@@ -103,6 +103,20 @@ h3 { margin: 4px 2px 0; font-size: 12px; letter-spacing: 1px; color: var(--m); t
 .del:active { transform: scale(.9); background: #FF453A33; }
 .lv.via { animation: via .3s ease-in forwards; }
 @keyframes via { to { opacity: 0; transform: translateX(40px); } }
+
+/* 1.8.0: ink / toner levels (#11) */
+.ink { padding: 12px 16px 14px; } .ink h4 { margin: 0 0 8px; font-size: 13px; color: var(--m); font-weight: 600; letter-spacing: .4px; display: flex; justify-content: space-between; }
+.cart { display: grid; grid-template-columns: 18px 1fr 46px; gap: 10px; align-items: center; padding: 6px 0; }
+.cart .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--c); box-shadow: 0 0 8px var(--c), inset 0 0 0 1px rgba(255,255,255,.35); }
+.cart .nm { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cart .bar { grid-column: 2; height: 9px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; margin-top: 4px; }
+.cart .bar i { display: block; height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--c), color-mix(in srgb, var(--c) 55%, #fff));
+  box-shadow: 0 0 8px var(--c); transition: width 1.2s cubic-bezier(.2,.8,.2,1); position: relative; overflow: hidden; }
+.cart .bar i::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); transform: translateX(-100%); animation: ink_luce 2.6s ease-in-out infinite; }
+@keyframes ink_luce { to { transform: translateX(100%); } }
+.cart .pc { grid-row: 1 / span 2; grid-column: 3; text-align: right; font-size: 17px; font-weight: 800; }
+.cart.basso .pc { color: #FF9F0A; } .cart.finito .pc { color: #FF453A; animation: lamp 1s ease-in-out infinite; }
+.cart .sub { grid-column: 2; font-size: 11px; color: var(--m); margin-top: 2px; } .cart.basso .sub, .cart.finito .sub { color: #FF9F0A; }
 </style>
 </head>
 <body>
@@ -117,6 +131,7 @@ h3 { margin: 4px 2px 0; font-size: 12px; letter-spacing: 1px; color: var(--m); t
   <h3 id="prs_h" style="display:none" data-t="printer"></h3>
   <div class="prs" id="prs"></div>
   <div class="avv" id="avv"></div>
+  <div class="box ink" id="ink" style="display:none"></div>
   <label class="drop" id="drop" for="file"><div class="ic">📄</div><b id="dt"></b><span id="ds"></span></label>
   <input type="file" id="file" accept=".pdf,.txt,.heic,.heif,image/*,application/pdf,text/plain">
   <div class="box" style="padding:6px 16px">
@@ -150,6 +165,7 @@ const I18N = {
   it: {back: 'Indietro', title: 'Stampa da remoto', subtitle: 'Scegli un file: la stampante di casa lo stampa, anche se sei fuori.',
        pick: 'Tocca per scegliere il file', pick_s: 'PDF, foto (JPG, PNG, HEIC) o testo · da File, Foto o iCloud', change: 'tocca per cambiarlo',
        copies: 'Copie', duplex: 'Fronte/retro', duplex_s: 'stampa su entrambi i lati', fit: 'Adatta al foglio', fit_s: 'rimpicciolisce se serve',
+       ink: 'Inchiostro e toner', ink_low: 'quasi finito: tienine uno di scorta', ink_out: 'finito: va sostituito', ink_unk: 'livello non indicato dalla stampante', ink_upd: 'aggiornato alle',
        bw: 'Bianco e nero', bw_s: 'niente inchiostro colorato', bw_only: 'questa stampante stampa solo in bianco e nero', bwt: 'B/N',
        pages: 'Pagine', pages_s: 'vuoto = tutte · es. 1-3,5', all: 'tutte', print: '🖨️ STAMPA A CASA', recent: 'Ultime stampe', none: 'Nessuna stampa ancora',
        sent: '✓ Inviato! La stampante di casa sta per stamparlo', uploading: 'Caricamento…', lost: '✗ Connessione persa durante il caricamento', lost2: '✗ File inviato ma nessuna risposta: guarda il Registro dell\'add-on (stampante raggiungibile? driver giusto?)',
@@ -164,6 +180,7 @@ const I18N = {
   en: {back: 'Back', title: 'Remote Print', subtitle: 'Pick a file: your home printer prints it, even when you are away.',
        pick: 'Tap to choose a file', pick_s: 'PDF, photos (JPG, PNG, HEIC) or text · from Files, Photos or iCloud', change: 'tap to change it',
        copies: 'Copies', duplex: 'Two-sided', duplex_s: 'print on both sides', fit: 'Fit to page', fit_s: 'shrinks it if needed',
+       ink: 'Ink & toner', ink_low: 'running low: keep a spare', ink_out: 'empty: replace it', ink_unk: 'level not reported by the printer', ink_upd: 'updated at',
        bw: 'Black & white', bw_s: 'no colour ink', bw_only: 'this printer prints black & white only', bwt: 'B&W',
        pages: 'Pages', pages_s: 'empty = all · e.g. 1-3,5', all: 'all', print: '🖨️ PRINT AT HOME', recent: 'Recent prints', none: 'No prints yet',
        sent: '✓ Sent! Your home printer is about to print it', uploading: 'Uploading…', lost: '✗ Connection lost while uploading', lost2: '✗ File sent but no answer: check the add-on Log (printer reachable? right driver?)',
@@ -202,7 +219,7 @@ function drawPrinters() {
   $('prs').innerHTML = PRS.map((n, i) => `<button type="button" class="${i === sel ? 'on' : ''}" data-i="${i}"><i></i>🖨️ ${String(n).replace(/</g, '&lt;')}</button>`).join('');
   $('prs').querySelectorAll('button').forEach(b => b.onclick = () => {
     sel = +b.dataset.i; try { localStorage.setItem('rp_printer', sel); } catch (e) {}
-    drawPrinters(); load(); loadPaper();
+    drawPrinters(); load(); loadPaper(); loadInk();
     if (edOpen) loadPaper().then(draw);   // printable margins change with the printer
   });
 }
@@ -215,6 +232,23 @@ const sheet = () => { const [w, h] = PAP.paper; return L.o === 'l' ? [h, w] : [w
 const marg = () => { const m = PAP.margins; if (L.o === 'p') return m;
   const a = Math.max(m.t, m.b), b = Math.max(m.l, m.r); return {l: a, r: a, t: b, b: b}; };   // landscape: safe side
 const psize = () => (P.sizes[pgN - 1] || P.sizes[0] || [595, 842]);
+
+// 1.8.0: ink / toner levels (#11), read from the printer itself; hidden when the printer does not report them
+async function loadInk() {
+  const p = sel; let r;
+  try { r = await (await fetch('ink?printer=' + p, {cache: 'no-store'})).json(); } catch (e) { return; }
+  if (p !== sel) return;
+  const S = (r && r.supplies) || [], box = $('ink');
+  if (!S.length) { box.style.display = 'none'; return; }
+  const esc = s => String(s).replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;');
+  box.innerHTML = `<h4><span>🖋️ ${T.ink}</span><span>${T.ink_upd} ${new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span></h4>` +
+    S.map(s => { const lv = s.level, low = Math.max(s.low || 10, 10), cl = lv == null ? '' : lv <= 2 ? 'finito' : lv <= Math.max(low, 20) ? 'basso' : '';
+      const col = /^#ffffff$/i.test(s.color) ? '#cfd8dc' : s.color;
+      return `<div class="cart ${cl}" style="--c:${col}"><span class="dot"></span><span class="nm">${esc(s.name)}</span><span class="pc">${lv == null ? '—' : lv + '%'}</span>
+        <div class="bar"><i data-w="${lv == null ? 0 : lv}"></i></div><div class="sub">${lv == null ? T.ink_unk : cl === 'finito' ? T.ink_out : cl === 'basso' ? T.ink_low : ''}</div></div>`; }).join('');
+  box.style.display = '';
+  requestAnimationFrame(() => box.querySelectorAll('.bar i').forEach(i => i.style.width = i.dataset.w + '%'));
+}
 async function loadPaper() {
   try { PAP = await (await fetch('paper?printer=' + sel, {cache: 'no-store'})).json(); }
   catch (e) { PAP = {paper: [595.28, 841.89], margins: {l: 12, r: 12, t: 12, b: 12}}; }
@@ -355,6 +389,7 @@ $('svuota').onclick = async () => {
   await Promise.all([fetch('clear', {method: 'POST'}), new Promise(r => setTimeout(r, 300))]); load();
 };
 loadPaper(); load(); setInterval(load, 3000);
+loadInk(); setInterval(loadInk, 300000);
 </script>
 </body>
 </html>

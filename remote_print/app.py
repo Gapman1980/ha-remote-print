@@ -5,6 +5,9 @@ and print it on a network printer. CUPS creates a driverless queue (IPP Everywhe
 so PDF, photos (JPG/PNG/HEIC) and text are converted to whatever the printer accepts.
 """
 import asyncio
+import http.client
+import ssl
+import struct
 import ipaddress
 import json
 import os
@@ -12,6 +15,7 @@ import re
 import time
 
 from aiohttp import web
+from urllib.parse import urlsplit
 
 OPTIONS_FILE = "/data/options.json"
 QUEUE = "RemotePrint"
@@ -551,10 +555,95 @@ async def clear(request):
     return web.json_response({"ok": True})
 
 
+# ---------- 1.8.0: ink / toner levels (#11) ----------
+# Read-only IPP Get-Printer-Attributes to the printer itself (marker-names/levels/colors, RFC 3805 / PWG 5100.13).
+# Nothing is printed. Driverless printers answer it; with socket:// queues we try IPP on the same address.
+# If the printer does not answer, CUPS' own copy of the levels (updated during jobs) is used. Cached 2 minutes.
+INK_CACHE = {}
+
+
+def _ipp_attr(tag, name, value):
+    n, v = name.encode(), value.encode()
+    return struct.pack(">BH", tag, len(n)) + n + struct.pack(">H", len(v)) + v
+
+
+def _ipp_ask(uri):
+    u = urlsplit(uri)
+    port = u.port or (443 if u.scheme in ("ipps", "https") else 631)
+    body = struct.pack(">BBHI", 2, 0, 0x000B, 1) + b"\x01" + _ipp_attr(0x47, "attributes-charset", "utf-8")
+    body += _ipp_attr(0x48, "attributes-natural-language", "en") + _ipp_attr(0x45, "printer-uri", uri)
+    for i, n in enumerate(("marker-names", "marker-levels", "marker-colors", "marker-types", "marker-low-levels")):
+        body += _ipp_attr(0x44, "requested-attributes" if i == 0 else "", n)
+    body += b"\x03"
+    if u.scheme in ("ipps", "https"):
+        ctx = ssl.create_default_context(); ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE   # self-signed printers
+        con = http.client.HTTPSConnection(u.hostname, port, timeout=6, context=ctx)
+    else:
+        con = http.client.HTTPConnection(u.hostname, port, timeout=6)
+    try:
+        con.request("POST", u.path or "/ipp/print", body, {"Content-Type": "application/ipp"})
+        d = con.getresponse().read()
+    finally:
+        con.close()
+    out, i, name = {}, 8, None
+    while i < len(d):
+        tag = d[i]; i += 1
+        if tag == 0x03:
+            break
+        if tag < 0x10:
+            continue
+        nl = struct.unpack(">H", d[i:i + 2])[0]; i += 2
+        if nl:
+            name = d[i:i + nl].decode(errors="replace")
+        i += nl
+        vl = struct.unpack(">H", d[i:i + 2])[0]; i += 2
+        v = d[i:i + vl]; i += vl
+        val = struct.unpack(">i", v)[0] if tag in (0x21, 0x23) and vl == 4 else v.decode(errors="replace")
+        out.setdefault(name, []).append(val)
+    names, levels = out.get("marker-names", []), out.get("marker-levels", [])
+    if not names or not levels:
+        return []
+    cols, types, lows = out.get("marker-colors", []), out.get("marker-types", []), out.get("marker-low-levels", [])
+    res = []
+    for k, n in enumerate(names):
+        lv = levels[k] if k < len(levels) and isinstance(levels[k], int) else -1
+        col = (cols[k] if k < len(cols) else "") or ""
+        col = re.findall(r"#[0-9A-Fa-f]{6}", col)[:1] or ["#888888"]
+        res.append({"name": n, "level": lv if lv >= 0 else None, "color": col[0], "type": types[k] if k < len(types) else "",
+                    "low": lows[k] if k < len(lows) and isinstance(lows[k], int) else 10})
+    return res
+
+
+async def ink(request):
+    idx, pr = printer(request.query.get("printer", "0"))
+    hit = INK_CACHE.get(idx)
+    if hit and time.time() - hit[0] < 120:
+        return web.json_response({"supplies": hit[1]})
+    _, v = await run("lpstat", "-v", pr["queue"], timeout=10)
+    m = re.search(r":\s*(\S+://\S+)", v)
+    dev = m.group(1) if m else ""
+    tries = []
+    if dev.startswith(("ipp://", "ipps://")):
+        tries.append(dev)
+    elif host_of(dev):
+        tries += [f"ipp://{host_of(dev)}:631/ipp/print", f"ipp://{host_of(dev)}:631/ipp"]
+    tries.append(f"ipp://localhost:631/printers/{pr['queue']}")   # CUPS' copy (filled while printing)
+    res = []
+    for uri in tries:
+        try:
+            res = await asyncio.get_running_loop().run_in_executor(None, _ipp_ask, uri)
+        except Exception:
+            res = []
+        if res:
+            break
+    INK_CACHE[idx] = (time.time(), res)
+    return web.json_response({"supplies": res})
+
+
 app = web.Application(middlewares=[ingress_only], client_max_size=80 * 1024 * 1024)
 app.add_routes([web.get("/", page), web.post("/print", print_file), web.get("/jobs", jobs), web.post("/cancel", cancel),
                 web.post("/forget", forget), web.post("/clear", clear),
-                web.post("/prepare", prepare), web.get("/preview", preview), web.get("/paper", paper)])
+                web.post("/prepare", prepare), web.get("/preview", preview), web.get("/paper", paper), web.get("/ink", ink)])
 
 if __name__ == "__main__":
     os.makedirs(UPLOADS, exist_ok=True)
