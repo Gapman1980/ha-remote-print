@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.3
+- **The ink in the glass tubes really moves** (`ink_style: tubes`): two waves on the surface going opposite ways, the liquid
+  sloshing from side to side and small bubbles rising inside.
+- **A cartridge running low shakes a lot** (orange edge), an empty one shakes even harder (red edge, blinking percentage),
+  so you notice it at once. The others keep the calm movement.
+
 ## 1.8.2
 - **Glass tubes** for the ink levels (suggested by @Eugenio-1204): new option `ink_style: tubes` shows one glass tube per
   cartridge with a moving liquid, the percentage and the name under it. `bars` (default) keeps the horizontal bars.
