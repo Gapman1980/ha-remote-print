@@ -299,16 +299,26 @@ async function loadInk() {
   if (!S.length) { box.innerHTML = `<h4><span>🖋️ ${T.ink}</span></h4><div class="inkno">${r && r.sensors ? T.ink_bad : T.ink_none}</div>`;
     box.style.display = ''; return; }
   const esc = s => String(s).replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;');
+  // 1.9.2: printers often name cartridges in English ("Black ink", "Light Cyan ink"): Italian names when the page is in Italian
+  const nmIt = n => { if (lang !== 'it') return n; let t = String(n);
+    const C = [[/photo\s*black/i, 'nero foto'], [/matte?\s*black/i, 'nero opaco'], [/light\s*cyan/i, 'azzurro chiaro'], [/light\s*magenta/i, 'magenta chiaro'],
+      [/light\s*(black|gr[ae]y)/i, 'grigio chiaro'], [/tri[-\s]?colou?r/i, 'tricolore'], [/\bblack\b/i, 'nero'], [/\bcyan\b/i, 'azzurro'], [/\bmagenta\b/i, 'magenta'],
+      [/\byellow\b/i, 'giallo'], [/\bred\b/i, 'rosso'], [/\bblue\b/i, 'blu'], [/\bgreen\b/i, 'verde'], [/\bgr[ae]y\b/i, 'grigio'], [/\bcolou?r\b/i, 'colore']];
+    let col = ''; for (const [r, it] of C) if (r.test(t)) { col = it; t = t.replace(r, ' '); break; }
+    const toner = /\btoner\b/i.test(t);
+    t = t.replace(/\b(ink|inks|cartridge|cartuccia|inchiostro|toner|level)\b/gi, ' ').replace(/\s+/g, ' ').trim();
+    const out = (toner ? 'toner ' + col : col) + (t ? ' ' + t : '');
+    return out ? out.trim().charAt(0).toUpperCase() + out.trim().slice(1) : n; };
   box.innerHTML = `<h4><span>🖋️ ${T.ink}</span><span>${T.ink_upd} ${new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span></h4>` +
     (CFG.inkStyle === 'tubes' ? '<div class="tubes">' + S.map(s => {
       const lv = s.level, low = Math.max(s.low || 10, 10), cl = lv == null ? '' : lv <= 2 ? 'finito' : lv <= Math.max(low, 20) ? 'basso' : '';
       const col = /^#ffffff$/i.test(s.color) ? '#cfd8dc' : /^#0{6}$/.test(s.color) ? '#5a5a5a' : s.color;
-      return `<div class="tube ${cl}${lv == null ? ' nolv' : ''}" style="--c:${col}" title="${esc(s.name)}"><div class="gl"><div class="lq" data-h="${lv == null ? 0 : lv}"><div class="bo">${lv ? '<i></i><i></i><i></i>' : ''}</div></div></div>
-        <span class="pc">${lv == null ? '?' : lv + '%'}</span><span class="nm">${esc(s.name)}</span></div>`; }).join('') + '</div>' +
+      return `<div class="tube ${cl}${lv == null ? ' nolv' : ''}" style="--c:${col}" title="${esc(nmIt(s.name))}"><div class="gl"><div class="lq" data-h="${lv == null ? 0 : lv}"><div class="bo">${lv ? '<i></i><i></i><i></i>' : ''}</div></div></div>
+        <span class="pc">${lv == null ? '?' : lv + '%'}</span><span class="nm">${esc(nmIt(s.name))}</span></div>`; }).join('') + '</div>' +
       (S.every(s => s.level == null) ? `<div class="inkno" style="margin-top:8px">${r && r.sensors ? T.ink_bad : T.ink_nolv}</div>` : '') :
     S.map(s => { const lv = s.level, low = Math.max(s.low || 10, 10), cl = lv == null ? '' : lv <= 2 ? 'finito' : lv <= Math.max(low, 20) ? 'basso' : '';
       const col = /^#ffffff$/i.test(s.color) ? '#cfd8dc' : s.color;
-      return `<div class="cart ${cl}" style="--c:${col}"><span class="dot"></span><span class="nm">${esc(s.name)}</span><span class="pc">${lv == null ? '—' : lv + '%'}</span>
+      return `<div class="cart ${cl}" style="--c:${col}"><span class="dot"></span><span class="nm">${esc(nmIt(s.name))}</span><span class="pc">${lv == null ? '—' : lv + '%'}</span>
         <div class="bar"><i data-w="${lv == null ? 0 : lv}"></i></div><div class="sub">${lv == null ? T.ink_unk : cl === 'finito' ? T.ink_out : cl === 'basso' ? T.ink_low : ''}</div></div>`; }).join(''));
   box.style.display = '';
   box.classList.toggle('nowave', CFG.inkWave === false);   // 1.8.6: ink_wave off = still ink, bubbles only

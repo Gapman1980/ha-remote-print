@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.2
+- **Ink names in Italian** (thanks @Eugenio-1204): when the page is in Italian, the cartridge names that the printer sends in
+  English are translated: *Black ink* → **Nero**, *Cyan ink* → **Azzurro**, *Light Cyan ink* → **Azzurro chiaro**,
+  *Light Magenta ink* → **Magenta chiaro**, *Yellow ink* → **Giallo**, *Photo Black* → **Nero foto**, *Tri-color* → **Tricolore**,
+  *Black Toner* → **Toner nero** (model codes like "HP W1350A" are kept).
+
 ## 1.9.1
 - **Add the card:** the card comes in **Italian** when Home Assistant / the add-on is in Italian (Pagine rimaste, Stampate,
   Scansioni, Tutto a posto, Spenta …), and the printer name loses the IP address in brackets
