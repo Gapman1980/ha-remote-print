@@ -13,12 +13,15 @@ Upload a file from your phone — even when you are away from home — and your 
 
 <p align="center"><img src="docs/demo.gif" width="300" alt="Remote Print: printer popup, upload page, print, printed"></p>
 
+<p align="center"><b>What's new 1.7 → 1.8.5 / Novità</b><br><img src="docs/novita_1_8.png" alt="Remote Print 1.7 to 1.8.5: ink tubes, bars, black and white, ink_sensors, allowed_users"></p>
+
 ---
 
 ## What it does
 
 - A page inside Home Assistant (sidebar entry **Print**): pick a file, choose copies, two-sided, black & white, fit to page, page ranges, tap **PRINT AT HOME**.
-- **Ink and toner levels** right on the page (one coloured bar per cartridge, read from the printer, nothing to set up).
+- **Ink and toner levels** right on the page, read from the printer (nothing to set up): coloured **bars** or **glass tubes** with moving ink (`ink_style`, 1.8.2); a cartridge running low shakes. Printer silent? Use the sensors Home Assistant already has (`ink_sensors`, 1.8.1).
+- **Black & white** switch (1.7.0, `bw_default` to keep it on) and **non-admin users** allowed by username (`allowed_users`).
 - Works from anywhere Home Assistant works (Nabu Casa, VPN, reverse proxy…): the file travels through Home Assistant **ingress**, nothing is exposed to the internet.
 - Accepts **PDF, photos (JPG, PNG, HEIC from iPhone) and text**. Word/Excel: export them to PDF on the phone first.
 - Live list of recent prints (*Queued → Printing… → Printed ✓*), cancel button, printer alerts (out of paper, toner low, door open).
@@ -189,8 +192,14 @@ The web server only accepts requests coming from Home Assistant ingress (`172.30
 
 Nella GIF in alto: popup della stampante → **CARICA FILE E STAMPA** → scelta del file → **STAMPA A CASA** → "Stampato ✓".
 
+**Novità 1.7 → 1.8.5:** provette dell'inchiostro, barre, bianco e nero, `ink_sensors`, `allowed_users`.
+
+![Novità 1.7 - 1.8.5](docs/novita_1_8.png)
+
 ### Cosa fa
-- Una pagina dentro Home Assistant (voce **Stampa** nel menu): scegli il file, copie, fronte/retro, adatta al foglio, pagine e premi **STAMPA A CASA**.
+- Una pagina dentro Home Assistant (voce **Stampa** nel menu): scegli il file, copie, fronte/retro, bianco e nero, adatta al foglio, pagine e premi **STAMPA A CASA**.
+- **Livelli di inchiostro e toner** sulla pagina, letti dalla stampante: **barre** colorate o **provette** con il liquido che si muove (`ink_style`, 1.8.2); la cartuccia quasi finita si scuote. Se la stampante non li comunica si usano i sensori di Home Assistant (`ink_sensors`, 1.8.1).
+- Interruttore **Bianco e nero** (1.7.0, `bw_default` per averlo sempre acceso) e **utenti non amministratori** ammessi per nome utente (`allowed_users`: premi + e scrivi il nome del login).
 - Funziona ovunque funzioni Home Assistant (Nabu Casa, VPN…): il file passa dall'**ingress** di HA, niente porte aperte su internet.
 - Accetta **PDF, foto (JPG, PNG, HEIC dell'iPhone) e testo**. Word/Excel: esportali prima in PDF dal telefono.
 - Elenco delle ultime stampe con stato in tempo reale, annulla, avvisi della stampante (carta finita, toner, sportello aperto).
