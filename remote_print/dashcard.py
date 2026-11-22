@@ -21,6 +21,15 @@ COLOUR_RX = re.compile(r"(photo_?black|black|cyan|magenta|yellow|light_?cyan|lig
 IT = {"UPLOAD FILE AND PRINT": "CARICA FILE E STAMPA",
       "tap · pick a file on your phone, it prints at home": "tocca · scegli un file sul telefono, si stampa a casa",
       "Printer": "Stampante", "My printer": "Stampante"}
+# 1.9.1: texts inside the card templates (JavaScript strings), Italian when Home Assistant / the add-on is in Italian
+JS_IT = {"Off": "Spenta", "Printing…": "In stampa…", "Power saving: wakes up by itself": "Risparmio energetico: si sveglia da sola",
+         "Ready to print": "Pronta per stampare", "OFF": "SPENTA", "PRINTING…": "IN STAMPA…", "PRINTING": "IN STAMPA",
+         "SLEEP": "RIPOSO", "READY": "PRONTA", "Almost empty: ": "Quasi finito: ", "Low: ": "In esaurimento: ",
+         " · order a new one": " · ordinane uno nuovo", "All supplies OK": "Tutto a posto", "Pages left": "Pagine rimaste",
+         "toner estimate": "stima del toner", "Printed": "Stampate", "with this toner": "con questo toner", "Scans": "Scansioni",
+         "from the glass": "dal vetro", "Misfeeds": "Prese mancate", "sheets not picked": "fogli non presi",
+         "Toner made": "Toner prodotto", "cartridge production date": "data di produzione",
+         "Ink / toner levels": "Livelli inchiostro / toner", "Ink / toner": "Inchiostro / toner", "My printer": "Stampante"}
 
 
 class Ha:
@@ -68,7 +77,9 @@ def guess_printer(states, ink_sensors):
         for st in (prefix.rstrip("_"), prefix + "status", prefix + "state"):
             if st in ids:
                 name = ids[st].get("attributes", {}).get("friendly_name") or st
-                return {"prefix": prefix, "status": st, "name": re.sub(r"\s*(status|stato)$", "", name, flags=re.I)}
+                name = re.sub(r"\s*(status|stato)$", "", name, flags=re.I)
+                name = re.sub(r"\s*\([^)]*\)\s*$", "", name) or name   # 1.9.1: "HP LaserJet (192.168.1.5)" -> "HP LaserJet"
+                return {"prefix": prefix, "status": st, "name": name}
         return {"prefix": prefix, "status": prefix + "status", "name": "Printer"}
     return None
 
@@ -87,6 +98,9 @@ def build_cards(pr, style, ink_sensors, ingress, lang):
                     v = v.replace("/api/hassio_ingress/YOUR_INGRESS_TOKEN/", ingress)
                     if lang == "it" and k in ("name", "label", "title") and v in IT:
                         v = IT[v]
+                    if lang == "it" and "[[[" in v:
+                        for en, it in JS_IT.items():
+                            v = v.replace("'" + en + "'", "'" + it + "'")
                     o[k] = v
                 else:
                     fix(v)

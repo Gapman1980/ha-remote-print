@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.1
+- **Add the card:** the card comes in **Italian** when Home Assistant / the add-on is in Italian (Pagine rimaste, Stampate,
+  Scansioni, Tutto a posto, Spenta …), and the printer name loses the IP address in brackets
+  ("HP LaserJet MFP M234dw (192.168.1.5)" → "HP LaserJet MFP M234dw"), so it is no longer cut.
+
 ## 1.9.0
 - **"Add the card" button** (suggested by @Eugenio-1204): at the bottom of the print page administrators find *Dashboard card*:
   pick a dashboard, tap **ADD THE CARD** and the printer mini card with its two popups (levels, counters, UPLOAD FILE AND PRINT)
