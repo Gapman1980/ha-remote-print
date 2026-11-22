@@ -22,6 +22,7 @@ Upload a file from your phone — even when you are away from home — and your 
 - A page inside Home Assistant (sidebar entry **Print**): pick a file, choose copies, two-sided, black & white, fit to page, page ranges, tap **PRINT AT HOME**.
 - **Ink and toner levels** right on the page, read from the printer (nothing to set up): coloured **bars** or **glass tubes** with moving ink (`ink_style`, 1.8.2); a cartridge running low shakes. Printer silent? Use the sensors Home Assistant already has (`ink_sensors`, 1.8.1).
 - **Black & white** switch (1.7.0, `bw_default` to keep it on) and **non-admin users** allowed by username (`allowed_users`).
+- 🆕 **1.9.0 – Add the card:** at the bottom of the print page administrators pick a dashboard and tap **ADD THE CARD**: the printer mini card + popup are added already set up, no YAML. 1.8.6: `ink_wave: false` keeps the ink still in the tubes (bubbles only).
 - Works from anywhere Home Assistant works (Nabu Casa, VPN, reverse proxy…): the file travels through Home Assistant **ingress**, nothing is exposed to the internet.
 - Accepts **PDF, photos (JPG, PNG, HEIC from iPhone) and text**. Word/Excel: export them to PDF on the phone first.
 - Live list of recent prints (*Queued → Printing… → Printed ✓*), cancel button, printer alerts (out of paper, toner low, door open).
@@ -138,6 +139,7 @@ toner level, pages left, printed pages, scans, misfeeds and an **UPLOAD FILE AND
 its **Back** button returns to the printer popup.
 
 - Needs (HACS): [button-card](https://github.com/custom-cards/button-card), [browser_mod](https://github.com/thomasloven/hass-browser_mod), [card-mod](https://github.com/thomasloven/lovelace-card-mod).
+- **Easiest (1.9.0):** open the print page as an administrator, scroll to *Dashboard card*, pick the dashboard and tap **ADD THE CARD**. Or by hand:
 - Set the three `variables` (in the mini card and in the popup): `prefix` (start of your printer's sensor ids), `status` and `name`. **Ink and toner levels are found automatically**: one animated bar per colour (black, cyan, magenta, yellow ...) for any printer added with the **IPP** integration (usually auto-discovered) or the HP Printer integration. Two looks: `style: bars` or `style: tubes` (one glass tube per cartridge with a moving liquid). To pick the entities yourself (order and names as you like, e.g. Italian names) fill `inks:` with entity ids or `{entity, name, color}`.
 - Replace `YOUR_INGRESS_TOKEN` with the address shown in the add-on **Log**: `Ingress URL for the dashboard popup: /api/hassio_ingress/…/`.
 - Administrators can always open the page; for other family members see *Non-admin users* below.
@@ -200,6 +202,7 @@ Nella GIF in alto: popup della stampante → **CARICA FILE E STAMPA** → scelta
 - Una pagina dentro Home Assistant (voce **Stampa** nel menu): scegli il file, copie, fronte/retro, bianco e nero, adatta al foglio, pagine e premi **STAMPA A CASA**.
 - **Livelli di inchiostro e toner** sulla pagina, letti dalla stampante: **barre** colorate o **provette** con il liquido che si muove (`ink_style`, 1.8.2); la cartuccia quasi finita si scuote. Se la stampante non li comunica si usano i sensori di Home Assistant (`ink_sensors`, 1.8.1).
 - Interruttore **Bianco e nero** (1.7.0, `bw_default` per averlo sempre acceso) e **utenti non amministratori** ammessi per nome utente (`allowed_users`: premi + e scrivi il nome del login).
+- 🆕 **1.9.0 – Aggiungi la card:** in fondo alla pagina di stampa gli amministratori scelgono una dashboard e premono **AGGIUNGI LA CARD**: mini card della stampante + popup già configurati, senza YAML. 1.8.6: `ink_wave: false` tiene fermo l'inchiostro nelle provette (solo bollicine).
 - Funziona ovunque funzioni Home Assistant (Nabu Casa, VPN…): il file passa dall'**ingress** di HA, niente porte aperte su internet.
 - Accetta **PDF, foto (JPG, PNG, HEIC dell'iPhone) e testo**. Word/Excel: esportali prima in PDF dal telefono.
 - Elenco delle ultime stampe con stato in tempo reale, annulla, avvisi della stampante (carta finita, toner, sportello aperto).
@@ -273,6 +276,7 @@ Hai provato un'altra stampante? Scrivilo in una [issue](https://github.com/Gapma
 
 ### Card per la dashboard (facoltativa)
 - `examples/simple_button.yaml`: pulsante semplice che apre la pagina.
+- **Il modo più semplice (1.9.0):** apri la pagina di stampa da amministratore, in fondo trovi *Card per la dashboard*: scegli la dashboard e premi **AGGIUNGI LA CARD**. Oppure a mano:
 - `examples/printer_card_popup.yaml`: mini card animata della stampante + popup con livelli inchiostro / toner e contatori, e pulsante **CARICA FILE E STAMPA** che apre la pagina *dentro il popup* (con **Indietro** torni al popup). Servono button-card, browser_mod e card-mod; imposta le tre `variables` (`prefix` = inizio dei nomi dei sensori, `status`, `name`): **i livelli di inchiostro / toner li trova da sola**, una barra animata per colore, con l'integrazione **IPP** (di solito trovata in automatico) o HP Printer; due stili, `style: bars` (barre) o `style: tubes` (provette con il liquido che ondeggia); per scegliere tu le cartucce, con nomi e ordine a piacere, compila `inks:` (id delle entità oppure `entity`/`name`/`color`); poi sostituisci `YOUR_INGRESS_TOKEN` con l'indirizzo scritto nel Registro dell'add-on.
 - **Utenti non amministratori** (1.5.0): scrivi i loro **nomi utente** di Home Assistant in `allowed_users` (es. `- alisha`), salva e riavvia. Aprono **Stampa** dal menu laterale o dal popup con il loro accesso, anche fuori casa e senza porte aperte; gli altri vedono 🔒 *Non autorizzato*. La voce **Stampa** compare nel menu di tutti gli utenti (chi non serve la può nascondere).
 - Solo rete di casa, senza utenti: attiva `lan_access`, metti una porta (es. `8099`) nella sezione **Rete**, riavvia l'add-on e usa una card **Pagina web** con `http://IP-HOME-ASSISTANT:8099/`. ⚠️ Niente password: chiunque sia sul tuo Wi-Fi può stampare; non aprire mai la porta sul router; funziona solo aprendo Home Assistant in `http://` da casa (non da `https://` / Nabu Casa).

@@ -80,3 +80,6 @@ The colour of each bar comes from the sensor name (black/nero, cyan, magenta, ye
 For a printer in `other_printers` write them on one line: `ink_sensors: "sensor.a, sensor.b"`.
 
 `ink_style: tubes` shows the levels as glass tubes (one per cartridge, with a moving liquid) instead of bars.
+`ink_wave: false` keeps the ink still inside the tubes (only the bubbles move).
+
+**Dashboard card (1.9.0):** administrators find *Dashboard card* at the bottom of the print page: pick a dashboard and tap **ADD THE CARD** to get the printer mini card and its popup, already set up (needs button-card, card-mod and browser_mod from HACS).

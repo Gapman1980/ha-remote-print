@@ -1,0 +1,252 @@
+{
+ "_note": "generated from examples/printer_card_popup.yaml (Remote Print 1.9.0, Add the card)",
+ "mini": {
+  "type": "custom:button-card",
+  "entity": "sensor.YOUR_PRINTER_status",
+  "name": "Printer",
+  "variables": {
+   "prefix": "sensor.YOUR_PRINTER_",
+   "status": "sensor.YOUR_PRINTER_status",
+   "name": "My printer",
+   "style": "bars",
+   "inks": []
+  },
+  "section_mode": true,
+  "grid_options": {
+   "columns": 3,
+   "rows": 1.5
+  },
+  "show_name": false,
+  "show_state": false,
+  "show_icon": false,
+  "show_entity_picture": false,
+  "tap_action": {
+   "action": "none"
+  },
+  "hold_action": {
+   "action": "none"
+  },
+  "custom_fields": {
+   "mk": "[[[\n\nconst rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\\w*|waste)\\b)/i, '').replace(/[\\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };\nconst inks = rpInks(states, variables.prefix, variables.inks);\nconst s = states[variables.status]?.state || 'unavailable';\nconst tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;   // the emptiest ink / toner\nconst spenta = ['off', 'unavailable', 'unknown'].includes(s);\nconst stampa = /print|process|busy|warm/i.test(s);\nconst c = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : spenta ? '#8E9BB0' : '#30D158';\n\nconst bw = 30 / Math.max(1, inks.length);\nconst bars = inks.map((x, j) => { const h = Math.max(0.7, x.v / 100 * 6);\n  return `<rect class=\"ib ${x.v < 10 ? 'cr' : ''}\" x=\"${(23 + j * bw + 0.35).toFixed(2)}\" y=\"${(40 - h).toFixed(2)}\" width=\"${(bw - 0.7).toFixed(2)}\" height=\"${h.toFixed(2)}\" rx=\"0.6\" fill=\"${x.col}\"/>`; }).join('');\nreturn `<div class=\"mk sp ${stampa ? 'st1' : ''}\">\n  <svg viewBox=\"0 0 76 40\" class=\"ic\">\n    <rect class=\"fo\" x=\"27\" y=\"2\" width=\"22\" height=\"10\" rx=\"1\"/>\n    <rect class=\"co\" x=\"19\" y=\"10\" width=\"38\" height=\"17\" rx=\"4\"/>\n    <rect class=\"fe\" x=\"25\" y=\"24\" width=\"26\" height=\"4\" rx=\"1.5\"/>\n    <g class=\"usc\"><rect class=\"fo\" x=\"27\" y=\"25\" width=\"22\" height=\"9\" rx=\"1\"/><path class=\"ri\" d=\"M30 28 H46 M30 31 H42\"/></g>\n    <circle class=\"led\" cx=\"51\" cy=\"15\" r=\"1.6\"/>\n    <rect class=\"tb\" x=\"23\" y=\"33.6\" width=\"30\" height=\"6.4\" rx=\"1\"/>${bars}\n  </svg>\n  <div class=\"nm\">Printer <span class=\"pc\">${isNaN(tn) ? '—' : Math.round(tn) + '%'}</span></div>\n  <div class=\"st\">${spenta ? 'OFF' : stampa ? 'PRINTING…' : /powersave|sleep/i.test(s) ? 'SLEEP' : 'READY'}</div>\n</div>`;\n]]]"
+  },
+  "extra_styles": "\n.mk { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 100%; }\n.ic { width: 66px; height: 36px; overflow: visible; filter: drop-shadow(0 0 4px var(--kc)); }\n.nm { font-size: 11px; font-weight: 500; color: #fff; white-space: nowrap; }\n.nm .pc { font-size: 10px; font-weight: 700; color: var(--kc); margin-left: 2px; }\n.st { font-size: 10px; font-weight: 700; color: var(--kc); white-space: nowrap; letter-spacing: .3px; display: flex; align-items: center; gap: 3px; }\n.cr .st { animation: mk_lamp .7s ease-in-out infinite; }\n@keyframes mk_lamp { 50% { opacity: .35; } }\n@keyframes mk_respiro { 50% { box-shadow: 0 0 16px color-mix(in srgb, var(--kc) 60%, transparent), inset 0 0 0 1px var(--kc); } }\n.fi { transform-box: fill-box; transform-origin: 50% 100%; animation: mk_fiamma .9s ease-in-out infinite alternate; }\n.fi2 { animation-duration: .65s; animation-delay: .2s; }\n@keyframes mk_fiamma { 0% { transform: scale(1, 1) skewX(0); } 50% { transform: scale(.92, 1.1) skewX(-4deg); } 100% { transform: scale(1.04, .94) skewX(3deg); } }\n@media (prefers-reduced-motion: reduce) { .mk *, ha-card { animation: none !important; } }\n\n.sp .co { fill: #24213a; stroke: var(--kc); stroke-width: 1.6; }\n.sp .fo { fill: #eef2f7; } .sp .fe { fill: #0b0a14; }\n.sp .ri { stroke: #8a94a8; stroke-width: 1; }\n.sp .usc { transform: translateY(-6px); }\n.sp.st1 .usc { animation: sp_usc 2.2s ease-in-out infinite; }\n@keyframes sp_usc { 0% { transform: translateY(-8px); } 100% { transform: translateY(2px); } }\n.sp .led { fill: var(--kc); animation: mk_lamp 2s ease-in-out infinite; }\n.sp .tb { fill: rgba(255,255,255,.10); }\n.sp .ib { filter: drop-shadow(0 0 1.5px currentColor); transition: height .6s, y .6s; }\n.sp .ib.cr { animation: mk_lamp .9s ease-in-out infinite; }\n",
+  "styles": {
+   "card": [
+    {
+     "border-radius": "12px"
+    },
+    {
+     "padding": "6px 4px"
+    },
+    {
+     "background": "[[[\n\nconst rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\\w*|waste)\\b)/i, '').replace(/[\\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };\nconst inks = rpInks(states, variables.prefix, variables.inks);\nconst s = states[variables.status]?.state || 'unavailable';\nconst tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;\nconst spenta = ['off', 'unavailable', 'unknown'].includes(s);\nconst stampa = /print|process|busy|warm/i.test(s);\nconst c = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : spenta ? '#8E9BB0' : '#30D158';\n\nreturn `radial-gradient(90% 80% at 50% 30%, ${c}2a, transparent 70%), linear-gradient(165deg, #1d1a2e, #0d0c16)`;\n]]]"
+    },
+    {
+     "box-shadow": "[[[\n\nconst rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\\w*|waste)\\b)/i, '').replace(/[\\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };\nconst inks = rpInks(states, variables.prefix, variables.inks);\nconst s = states[variables.status]?.state || 'unavailable';\nconst tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;\nconst spenta = ['off', 'unavailable', 'unknown'].includes(s);\nconst stampa = /print|process|busy|warm/i.test(s);\nconst c = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : spenta ? '#8E9BB0' : '#30D158';\n\nreturn (!spenta || tn < 25) ? `0 0 10px ${c}55, inset 0 0 0 1px ${c}` : `inset 0 0 0 1px ${c}44`;\n]]]"
+    },
+    {
+     "animation": "[[[\n\nconst rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\\w*|waste)\\b)/i, '').replace(/[\\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };\nconst inks = rpInks(states, variables.prefix, variables.inks);\nconst s = states[variables.status]?.state || 'unavailable';\nconst tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;\nconst spenta = ['off', 'unavailable', 'unknown'].includes(s);\nconst stampa = /print|process|busy|warm/i.test(s);\nconst c = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : spenta ? '#8E9BB0' : '#30D158';\n\nreturn (tn < 10) ? 'mk_respiro 1.6s ease-in-out infinite' : 'none';\n]]]"
+    },
+    {
+     "--kc": "[[[\n\nconst rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\\w*|waste)\\b)/i, '').replace(/[\\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };\nconst inks = rpInks(states, variables.prefix, variables.inks);\nconst s = states[variables.status]?.state || 'unavailable';\nconst tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;\nconst spenta = ['off', 'unavailable', 'unknown'].includes(s);\nconst stampa = /print|process|busy|warm/i.test(s);\nconst c = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : spenta ? '#8E9BB0' : '#30D158';\n\nreturn c;\n]]]"
+    },
+    {
+     "border": "none"
+    }
+   ],
+   "grid": [
+    {
+     "grid-template-areas": "\"mk\""
+    },
+    {
+     "grid-template-columns": "1fr"
+    },
+    {
+     "grid-template-rows": "1fr"
+    }
+   ],
+   "custom_fields": {
+    "mk": [
+     {
+      "align-self": "center"
+     },
+     {
+      "width": "100%"
+     }
+    ]
+   }
+  },
+  "double_tap_action": {
+   "action": "fire-dom-event",
+   "browser_mod": {
+    "service": "browser_mod.popup",
+    "data": {
+     "popup_card_id": "rp_printer"
+    }
+   }
+  }
+ },
+ "popups": [
+  {
+   "type": "custom:popup-card",
+   "popup_card_id": "rp_printer",
+   "title": "Printer",
+   "size": "wide",
+   "dismissable": true,
+   "card": {
+    "type": "vertical-stack",
+    "cards": [
+     {
+      "type": "custom:button-card",
+      "variables": {
+       "prefix": "sensor.YOUR_PRINTER_",
+       "status": "sensor.YOUR_PRINTER_status",
+       "name": "My printer",
+       "style": "bars",
+       "inks": []
+      },
+      "show_name": false,
+      "show_state": false,
+      "show_icon": false,
+      "show_label": false,
+      "tap_action": {
+       "action": "none"
+      },
+      "hold_action": {
+       "action": "none"
+      },
+      "styles": {
+       "card": [
+        {
+         "padding": "0"
+        }
+       ],
+       "grid": [
+        {
+         "grid-template-areas": "\"p\""
+        },
+        {
+         "grid-template-columns": "1fr"
+        }
+       ],
+       "custom_fields": {
+        "p": [
+         {
+          "width": "100%"
+         }
+        ]
+       }
+      },
+      "custom_fields": {
+       "p": "[[[\nconst V = variables;\nwindow.__spPopRender = () => {\nconst H = document.querySelector('home-assistant')?.hass?.states || {};\nconst rpInks = (S, P, L) => { const col = k => { const l = /light|chiar|photo cyan|photo magenta/.test(k); return /cyan|ciano|azzurr/.test(k) ? (l ? '#8FE6FF' : '#00C8FF') : /magenta/.test(k) ? (l ? '#E08BFF' : '#FF3DA6') : /yellow|giallo/.test(k) ? '#FFD60A' : /gr[ae]y|grigi/.test(k) ? '#9AA3B2' : /red|rosso/.test(k) ? '#FF453A' : /blue|blu/.test(k) ? '#2E7BFF' : /green|verde/.test(k) ? '#30D158' : /waste|esaust|residu/.test(k) ? '#8A94A8' : /black|nero|matte|photo/.test(k) ? '#C9CED8' : '#A78BFA'; }; const rank = k => /black|nero/.test(k) ? 0 : /cyan|ciano|azzurr/.test(k) ? (/light|chiar/.test(k) ? 2 : 1) : /magenta/.test(k) ? (/light|chiar/.test(k) ? 4 : 3) : /yellow|giallo/.test(k) ? 5 : 6; const item = (i, name, c, r) => { const st = S[i]; if (!st) return null; const v = parseFloat(st.state); if (isNaN(v)) return null; const f = name || st.attributes.friendly_name || i; const n = name || f.replace(/^.*?(?=\\b(black|cyan|magenta|yellow|photo|gr[ae]y|light|matte|colou?r|tri|nero|ciano|giallo|azzurr\\w*|waste)\\b)/i, '').replace(/[\\s_]*level$/i, '') || f; const k = (i + ' ' + f + ' ' + (name || '')).toLowerCase(); return {id: i, n, col: c || col(k), r: r ?? rank(k), v: Math.max(0, Math.min(100, v))}; }; const man = (Array.isArray(L) ? L : []).map((e, j) => typeof e === 'string' ? item(e, '', '', j) : e && e.entity ? item(e.entity, e.name, e.color, j) : null).filter(Boolean); if (man.length) return man; return Object.keys(S).filter(i => i.startsWith(P) && S[i] && S[i].attributes && (S[i].attributes.marker_type !== undefined || (S[i].attributes.unit_of_measurement === '%' && /(toner|ink|cartridge)(_level)?$|_(black|cyan|magenta|yellow)$/i.test(i))) && !/remaining|impression|manufactur|date|serial|install|status/i.test(i)).map(i => item(i, '', '', null)).filter(Boolean).sort((a, b) => a.r - b.r || a.n.localeCompare(b.n)); };\nconst P = V.prefix, sv = k => H[P + k]?.state;\nconst inks = rpInks(H, P, V.inks);\nconst s = H[V.status]?.state || 'unavailable', tn = inks.length ? Math.min(...inks.map(x => x.v)) : NaN;\nconst spenta = ['off', 'unavailable', 'unknown'].includes(s), stampa = /print|process|busy|warm/i.test(s);\nconst A = tn < 10 ? '#FF3B30' : tn < 25 ? '#FF9F0A' : '#30D158';\nconst rs = /powersave|sleep/i.test(s);\nconst txt = spenta ? 'Off' : stampa ? 'Printing…' : rs ? 'Power saving: wakes up by itself' : 'Ready to print';\nconst basse = inks.filter(x => x.v < 25);\nconst avv = !inks.length ? 'No ink / toner sensors with this prefix' : basse.length\n  ? (tn < 10 ? 'Almost empty: ' : 'Low: ') + basse.map(x => x.n).join(', ') + (tn < 10 ? ' · order a new one' : '') : 'All supplies OK';\nconst lv = x => `<div class=\"ir ${x.v < 10 ? 'cr' : ''}\"><span class=\"in\">${x.n.replace(/</g, '&lt;')}</span>\n  <div class=\"bar ik\"><i style=\"width:${x.v}%;--a:${x.col}\"></i></div>\n  <b class=\"iv\" style=\"color:${x.v < 10 ? '#FF3B30' : x.v < 25 ? '#FF9F0A' : '#fff'}\">${Math.round(x.v)}%</b></div>`;\nconst tu = x => `<div class=\"tu ${x.v < 10 ? 'cr' : x.v < 25 ? 'lo' : ''}\" style=\"--c:${x.col};--v:${x.v}\">\n  <div class=\"tb\"><div class=\"liq\"><svg class=\"wv\" viewBox=\"0 0 120 12\" preserveAspectRatio=\"none\"><path d=\"M0 6 Q7.5 1 15 6 T30 6 T45 6 T60 6 T75 6 T90 6 T105 6 T120 6 V12 H0 Z\"/></svg></div><i class=\"gl\"></i></div>\n  <b>${Math.round(x.v)}%</b><span>${x.n.replace(/\\s*(ink|toner|cartridge|cartuccia)\\s*$/i, '').replace(/</g, '&lt;')}</span></div>`;\n// extra tiles: only the ones your integration provides (HP Printer integration has all of them)\nconst pr = parseFloat(sv('black_toner_remaining')), fatte = parseFloat(sv('black_toner_total_impression'));\nconst prPct = H[P + 'black_toner_remaining']?.attributes?.unit_of_measurement === '%';   // pages or % (#6)\nconst fab = Date.parse(sv('black_toner_manufacture_date'));\nconst ok = v => v !== undefined && v !== null && !['unknown', 'unavailable', 'NaN'].includes(String(v));\nconst tiles = [\n  ['Pages left', isNaN(pr) ? null : prPct ? Math.round(pr) + '%' : '~' + pr, 'toner estimate'],\n  ['Printed', isNaN(fatte) ? null : fatte, 'with this toner'],\n  ['Scans', sv('scanner_total_pages_from_scanner_glass'), 'from the glass'],\n  ['Misfeeds', sv('printer_total_miss_picks'), 'sheets not picked'],\n  ['Toner made', isNaN(fab) ? null : new Date(fab).toLocaleDateString(navigator.language, {month: 'short', year: 'numeric'}), 'cartridge production date'],\n].filter(t => ok(t[1]));\nreturn `<div class=\"pp\" style=\"--a:${A}\"><div class=\"w\">\n  <div class=\"hd\"><div class=\"bo\"><ha-icon icon=\"mdi:printer\" style=\"width:34px;height:34px;flex:0 0 34px;--mdc-icon-size:34px;color:var(--a)\"></ha-icon></div>\n  <div class=\"t\"><b>${String(V.name || 'My printer').replace(/</g, '&lt;')}</b><span>${txt}</span>\n  <div style=\"margin-top:6px\"><div class=\"pill\" style=\"--p:${spenta ? '#8a94a8' : stampa ? '#00CFFF' : rs ? '#FFD60A' : '#30D158'}\">${spenta ? 'OFF' : stampa ? 'PRINTING' : rs ? 'SLEEP' : 'READY'}</div></div></div></div>\n  <div class=\"te\" style=\"margin-top:12px\"><small>${inks.length > 1 ? 'Ink / toner levels' : 'Ink / toner'}</small>\n  ${V.style === 'tubes' ? `<div class=\"tu-g\" style=\"grid-template-columns:repeat(${Math.min(inks.length, 8)},minmax(0,1fr))\">${inks.map(tu).join('')}</div>` : `<div class=\"ik-l\">${inks.map(lv).join('')}</div>`}<i style=\"margin-top:6px;color:${tn < 25 ? A : '#aab4c8'}\">${avv}</i></div>\n  ${tiles.length ? `<div class=\"tg\">${tiles.map(t => `<div class=\"te\"><small>${t[0]}</small><b>${t[1]}</b><i>${t[2]}</i></div>`).join('')}</div>` : ''}\n  </div>\n</div>`;\n};\n\n// aggiornamento \"chirurgico\": confronta il nuovo HTML con quello a schermo e cambia solo testi/attributi diversi\nwindow.__morph = (el, html) => {\n  const t = document.createElement('template'); t.innerHTML = html;\n  const patch = (a, b) => {\n    if (a.nodeType !== b.nodeType || a.nodeName !== b.nodeName) { a.replaceWith(b.cloneNode(true)); return; }\n    if (a.nodeType === 3 || a.nodeType === 8) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }\n    if (a.nodeType !== 1) return;\n    for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);\n    for (const at of [...b.attributes]) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);\n    figli(a, b);\n  };\n  const figli = (a, b) => {\n    const ac = [...a.childNodes], bc = [...b.childNodes], n = Math.min(ac.length, bc.length);\n    for (let i = 0; i < n; i++) patch(ac[i], bc[i]);\n    for (let i = n; i < ac.length; i++) ac[i].remove();\n    for (let i = n; i < bc.length; i++) a.appendChild(bc[i].cloneNode(true));\n  };\n  figli(el, t.content);\n};\n// vivo v2 (11/11/2026): ricerca condivisa e solo quando serve, pausa animazioni fuori schermo\nwindow.__vivoTrova = (forza) => {\n  const ora = Date.now();\n  if (!forza && window.__vivoT && ora - window.__vivoT.t < 400) return window.__vivoT.els;\n  const out = [];\n  const trova = r => { r.querySelectorAll('[data-vivo]').forEach(e => out.push(e)); r.querySelectorAll('*').forEach(e => e.shadowRoot && trova(e.shadowRoot)); };\n  trova(document); window.__vivoT = {t: ora, els: out}; return out;\n};\nif (!window.__vivoIO && window.IntersectionObserver) window.__vivoIO = new IntersectionObserver(v => v.forEach(x => x.target.classList.toggle('vivo-fuori', !x.isIntersecting)), {threshold: 0});\nwindow.__spPopKey = () => {\n  const H = document.querySelector('home-assistant')?.hass?.states || {};\n  if (!window.__spPopIds || Date.now() - window.__spPopIdsT > 60000) { window.__spPopIds = Object.keys(H).filter(i => i.startsWith(V.prefix) || i === V.status || (V.inks || []).some(e => (e && e.entity || e) === i)).sort(); window.__spPopIdsT = Date.now(); }\n  return window.__spPopIds.map(i => H[i] ? H[i].state + H[i].last_updated : '').join('|') + '';\n};\nif (!window.__spPopTimer) { let vuoto = 0; window.__spPopTimer = setInterval(() => {\n  let els = window.__spPopEls || [];\n  if (!els.length || els.some(e => !e.isConnected)) {\n    els = window.__vivoTrova().filter(e => e.hasAttribute('data-live-spPop')); window.__spPopEls = els;\n    if (window.__vivoIO) els.forEach(e => window.__vivoIO.observe(e));\n    if (!els.length) { if (++vuoto > 20) { clearInterval(window.__spPopTimer); window.__spPopTimer = null; window.__spPopEls = null; } return; }\n  }\n  vuoto = 0;\n  const h = document.querySelector('home-assistant')?.hass;\n  if (h === window.__spPopH) return;\n  window.__spPopH = h;\n  const k = window.__spPopKey();\n  for (const e of els) if (e.dataset.k !== k) { e.dataset.k = k; window.__morph(e, window.__spPopRender()); }\n}, 250); }\nreturn `<style>.vivo-fuori, .vivo-fuori *, .vivo-fuori *::before, .vivo-fuori *::after { animation-play-state: paused !important; }</style><div data-live-spPop data-vivo data-k=\"${window.__spPopKey()}\">${window.__spPopRender()}</div>`;\n]]]"
+      },
+      "extra_styles": "\nha-card { background: transparent !important; border: none !important; box-shadow: none !important; overflow: visible; }\n.pp { display: flex; flex-direction: column; gap: 10px; color: #fff; text-align: left; width: 100%; }\n.w { position: relative; overflow: hidden; border-radius: 18px; padding: 14px;\n     background: radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--a) 26%, transparent), transparent 60%), linear-gradient(160deg, #161a2e, #0b0e1a);\n     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--a) 45%, transparent), 0 0 18px color-mix(in srgb, var(--a) 22%, transparent); }\n.hd { display: flex; align-items: center; gap: 12px; }\n.hd .bo { width: 56px; height: 56px; flex: none; border-radius: 16px; display: flex; align-items: center; justify-content: center;\n          background: color-mix(in srgb, var(--a) 18%, transparent); box-shadow: 0 0 16px color-mix(in srgb, var(--a) 40%, transparent);\n          animation: pp_resp 2.8s ease-in-out infinite; }\n@keyframes pp_resp { 50% { box-shadow: 0 0 26px color-mix(in srgb, var(--a) 70%, transparent); } }\n.hd .t { flex: 1; min-width: 0; } .hd b { display: block; font-size: 20px; font-weight: 800; line-height: 1.15; }\n.hd span { font-size: 12.5px; color: #aab4c8; }\n.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap;\n        background: color-mix(in srgb, var(--p, var(--a)) 18%, transparent); color: var(--p, var(--a)); border: 1px solid color-mix(in srgb, var(--p, var(--a)) 55%, transparent); }\n.tg { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-top: 12px; }\n.te { border-radius: 14px; padding: 9px 10px; background: rgba(255,255,255,.045); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); min-width: 0; }\n.te small { display: block; font-size: 10px; color: #8a94a8; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }\n.te b { display: block; font-size: 16px; font-weight: 800; margin-top: 2px; color: var(--t, #fff); overflow-wrap: anywhere; }\n.te i { display: block; font-style: normal; font-size: 11px; color: #aab4c8; }\n.sez { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #8a94a8; text-transform: uppercase; margin: 12px 2px 6px; }\n.ls { display: flex; flex-direction: column; gap: 6px; }\n.rw { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }\n.rw .o { font-size: 15px; font-weight: 800; min-width: 44px; color: var(--a); }\n.rw .x { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; line-height: 1.25; }\n.rw .x small { display: block; color: #8a94a8; font-size: 11px; font-weight: 500; }\n.rw.off { opacity: .45; }\n.bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; margin-top: 6px; }\n.bar i { display: block; height: 100%; border-radius: 4px; background: var(--a); box-shadow: 0 0 8px var(--a); }\n.hd b { overflow-wrap: anywhere; }\n.ik-l { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }\n.ir { display: grid; grid-template-columns: minmax(70px, 34%) 1fr 44px; align-items: center; gap: 10px; }\n.ir .in { font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: capitalize; }\n.ir .bar.ik { height: 12px; border-radius: 6px; margin-top: 0; }\n.ir .bar.ik i { position: relative; overflow: hidden; border-radius: 6px; transition: width .8s ease; animation: ik_in 1.1s ease-out; }\n.ir .bar.ik i::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);\n                       transform: translateX(-100%); animation: ik_luce 3.2s ease-in-out infinite; }\n.ir .iv { font-size: 14px; font-weight: 800; text-align: right; }\n.ir.cr .iv, .ir.cr .bar.ik i { animation: pp_lamp .9s ease-in-out infinite; }\n@keyframes ik_in { from { width: 0; } }\n.tu-g { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 8px; margin-top: 10px; }\n.tu { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; text-align: center; }\n.tu .tb { position: relative; width: 100%; max-width: 64px; height: 128px; border-radius: 12px 12px 24px 24px; overflow: hidden;\n          background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 2px rgba(255,255,255,.22), 0 0 14px color-mix(in srgb, var(--c) 25%, transparent); }\n.tu .liq { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--v) * 1%); transition: height 1s ease;\n           background: linear-gradient(180deg, color-mix(in srgb, var(--c) 80%, #fff), var(--c)); animation: tu_in 1.4s ease-out; }\n.tu .wv { position: absolute; left: 0; top: -9px; width: 200%; height: 10px; fill: color-mix(in srgb, var(--c) 80%, #fff); animation: tu_onda 2.6s linear infinite; }\n.tu:nth-child(2n) .wv { animation-duration: 3.3s; } .tu:nth-child(3n) .wv { animation-duration: 2.1s; }\n.tu .gl { position: absolute; left: 14%; top: 8px; bottom: 16px; width: 12%; border-radius: 6px; background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.05)); }\n.tu b { font-size: 15px; font-weight: 800; color: #fff; } .tu span { display: block; width: 100%; white-space: normal; font-size: 10.5px; line-height: 1.2; color: #aab4c8; overflow-wrap: normal; word-break: normal; hyphens: none; text-transform: capitalize; }\n.tu.lo b { color: #FF9F0A; } .tu.cr b { color: #FF3B30; }\n.tu.cr .tb { animation: tu_allarme 1s ease-in-out infinite; }\n@keyframes tu_onda { to { transform: translateX(-50%); } }\n@keyframes tu_in { from { height: 0; } }\n@keyframes tu_allarme { 50% { box-shadow: inset 0 0 0 2px #FF3B30, 0 0 16px #FF3B30aa; } }\n@media (prefers-reduced-motion: reduce) { .tu *, .tu .tb { animation: none !important; } }\n@keyframes ik_luce { 60%, 100% { transform: translateX(100%); } }\n@keyframes pp_lamp { 50% { opacity: .35; } }\n@media (prefers-reduced-motion: reduce) { .ir *, .ir *::after { animation: none !important; } }\n.qr { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 10px; border-radius: 14px; background: #fff; color: #111; }\n.qr img { width: 150px; height: 150px; flex: none; image-rendering: pixelated; }\n.qr b { font-size: 16px; } .qr span { display: block; font-size: 12px; color: #444; margin-top: 4px; }\n"
+     },
+     {
+      "type": "custom:button-card",
+      "icon": "mdi:file-upload",
+      "name": "UPLOAD FILE AND PRINT",
+      "label": "tap · pick a file on your phone, it prints at home",
+      "show_label": true,
+      "tap_action": {
+       "action": "fire-dom-event",
+       "browser_mod": {
+        "service": "browser_mod.javascript",
+        "data": {
+         "code": "(async () => {\n  const ha = document.querySelector('home-assistant');\n  const torna = 'rp_printer';\n  const apri = id => ha.dispatchEvent(new CustomEvent('ll-custom', {bubbles: true, composed: true,\n    detail: {action: 'fire-dom-event', browser_mod: {service: 'browser_mod.popup', data: {popup_card_id: id}}}}));\n  try {\n    const s = await ha.hass.callWS({type: 'supervisor/api', endpoint: '/ingress/session', method: 'post'});\n    document.cookie = 'ingress_session=' + s.session + ';path=/api/hassio_ingress/;SameSite=Strict' + (location.protocol === 'https:' ? ';Secure' : '');\n    if (window.__stpSess) clearInterval(window.__stpSess);\n    let giri = 0;\n    window.__stpSess = setInterval(() => {\n      if (++giri > 15) { clearInterval(window.__stpSess); return; }\n      ha.hass.callWS({type: 'supervisor/api', endpoint: '/ingress/validate_session', method: 'post', data: {session: s.session}}).catch(() => {});\n    }, 240000);\n  } catch (e) {}\n  if (window.__stpMsg) window.removeEventListener('message', window.__stpMsg);\n  window.__stpMsg = ev => { if (ev.origin === location.origin && ev.data && ev.data.remote_print === 'back') apri(torna); };\n  window.addEventListener('message', window.__stpMsg);\n  apri(torna + '_carica');\n})();"
+        }
+       }
+      },
+      "hold_action": {
+       "action": "none"
+      },
+      "styles": {
+       "card": [
+        {
+         "height": "58px"
+        },
+        {
+         "padding": "6px 10px"
+        },
+        {
+         "border-radius": "14px"
+        },
+        {
+         "background": "linear-gradient(160deg, #00CFFF33, #0b0e1a)"
+        },
+        {
+         "border": "1px solid #00CFFF88"
+        }
+       ],
+       "grid": [
+        {
+         "grid-template-areas": "\"i n\" \"i l\""
+        },
+        {
+         "grid-template-columns": "30px 1fr"
+        },
+        {
+         "column-gap": "8px"
+        }
+       ],
+       "img_cell": [
+        {
+         "justify-content": "center"
+        }
+       ],
+       "icon": [
+        {
+         "width": "26px"
+        },
+        {
+         "color": "#00CFFF"
+        }
+       ],
+       "name": [
+        {
+         "justify-self": "start"
+        },
+        {
+         "font-size": "13.5px"
+        },
+        {
+         "font-weight": "800"
+        },
+        {
+         "color": "#fff"
+        }
+       ],
+       "label": [
+        {
+         "justify-self": "start"
+        },
+        {
+         "font-size": "10.5px"
+        },
+        {
+         "color": "#9aa4b8"
+        }
+       ]
+      },
+      "extra_styles": "ha-card { transition: transform .15s; } ha-card:active { transform: scale(.95); }"
+     }
+    ]
+   }
+  },
+  {
+   "type": "custom:popup-card",
+   "popup_card_id": "rp_printer_carica",
+   "title": "Remote Print",
+   "size": "wide",
+   "dismissable": true,
+   "card": {
+    "type": "iframe",
+    "url": "/api/hassio_ingress/YOUR_INGRESS_TOKEN/?popup=rp_printer",
+    "aspect_ratio": "185%",
+    "card_mod": {
+     "style": "ha-card { background: #0b0e1a !important; border: none !important; border-radius: 18px !important; overflow: hidden; }"
+    }
+   }
+  }
+ ]
+}

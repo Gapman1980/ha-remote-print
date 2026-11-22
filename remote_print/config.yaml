@@ -1,5 +1,5 @@
 name: Remote Print
-version: "1.8.5"
+version: "1.9.0"
 slug: remote_print
 description: Upload a file from your phone (even away from home) and print it on your network printer. Driverless CUPS (IPP Everywhere / AirPrint), plus brlaser for Brother lasers without AirPrint.
 url: https://github.com/Gapman1980/ha-remote-print
@@ -35,6 +35,7 @@ options:
   allowed_users: []
   ink_sensors: []
   ink_style: bars
+  ink_wave: true
 schema:
   printer_name: str?
   printer_uri: str
@@ -57,3 +58,4 @@ schema:
   ink_sensors:
     - str
   ink_style: list(bars|tubes)
+  ink_wave: bool

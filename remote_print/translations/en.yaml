@@ -41,5 +41,8 @@ configuration:
   ink_style:
     name: Ink levels style
     description: "bars = horizontal bars; tubes = one glass tube per cartridge with a moving liquid."
+  ink_wave:
+    name: Moving ink
+    description: "Only with ink_style tubes. On = the ink in the tubes moves in waves; off = the ink stands still and only the bubbles rise. Cartridges running low always shake."
 network:
   8099/tcp: "Direct access port (only with lan_access on). Empty = disabled."

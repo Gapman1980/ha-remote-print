@@ -16,6 +16,7 @@ import time
 import urllib.request
 
 from aiohttp import web
+import dashcard   # 1.9.0: "Add the card" to a dashboard (#11)
 from urllib.parse import urlsplit
 
 OPTIONS_FILE = "/data/options.json"
@@ -78,7 +79,7 @@ for i, p in enumerate(OPT.get("other_printers") or [], start=2):
                      "sensors": p.get("ink_sensors") or ""})
 QUEUE_RE = r"(RemotePrint\d*)-(\d+)"
 CONFIG_JS = json.dumps({"lang": OPT.get("language", "auto"), "paper": OPT.get("paper", "A4"),
-                        "duplex": bool(OPT.get("duplex_default", False)), "bw": bool(OPT.get("bw_default", False)), "inkStyle": OPT.get("ink_style", "bars"), "printers": [p["name"] for p in PRINTERS]})
+                        "duplex": bool(OPT.get("duplex_default", False)), "bw": bool(OPT.get("bw_default", False)), "inkStyle": OPT.get("ink_style", "bars"), "inkWave": bool(OPT.get("ink_wave", True)), "printers": [p["name"] for p in PRINTERS]})
 
 
 def printer(i):
@@ -237,8 +238,14 @@ def is_local(ip):
         return False
 
 
+def is_admin(request):
+    """1.9.0: only Home Assistant administrators may change dashboards."""
+    return request.remote == INGRESS_IP and "system-admin" in ha_user(request)["groups"]
+
+
 async def page(request):
-    html = open("/index.html", encoding="utf-8").read().replace("__CONFIG__", CONFIG_JS)
+    cfg = json.loads(CONFIG_JS); cfg["admin"] = is_admin(request)
+    html = open("/index.html", encoding="utf-8").read().replace("__CONFIG__", json.dumps(cfg))
     return web.Response(text=html, content_type="text/html", headers={"Cache-Control": "no-store"})
 
 
@@ -724,10 +731,48 @@ async def ink(request):
     return web.json_response({"supplies": res, "sensors": False})
 
 
+_INGRESS = []
+
+
+def ingress_url():
+    if not _INGRESS:
+        req = urllib.request.Request("http://supervisor/addons/self/info",
+                                     headers={"Authorization": "Bearer " + os.environ.get("SUPERVISOR_TOKEN", "")})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            _INGRESS.append(json.load(r)["data"]["ingress_url"])
+    return _INGRESS[0]
+
+
+async def cards(request):
+    if not is_admin(request):
+        return web.json_response({"error": "admin"}, status=403)
+    try:
+        return web.json_response(await dashcard.dashboards())
+    except Exception as e:
+        print(f"[card] {e.__class__.__name__}: {e}", flush=True)
+        return web.json_response({"error": str(e)[:200]}, status=500)
+
+
+async def cards_add(request):
+    if not is_admin(request):
+        return web.json_response({"error": "admin"}, status=403)
+    try:
+        d = (await request.json()).get("dash") or None
+        lang = OPT.get("language", "auto")
+        if lang not in ("it", "en"):
+            lang = "it" if request.headers.get("Accept-Language", "").lower().startswith("it") else "en"
+        ing = await asyncio.get_running_loop().run_in_executor(None, ingress_url)
+        return web.json_response(await dashcard.add_card(d, OPT.get("ink_style", "bars"), sensor_list(OPT.get("ink_sensors")), ing, lang))
+    except Exception as e:
+        print(f"[card] {e.__class__.__name__}: {e}", flush=True)
+        return web.json_response({"ok": False, "why": "error", "detail": str(e)[:200]})
+
+
 app = web.Application(middlewares=[ingress_only], client_max_size=80 * 1024 * 1024)
 app.add_routes([web.get("/", page), web.post("/print", print_file), web.get("/jobs", jobs), web.post("/cancel", cancel),
                 web.post("/forget", forget), web.post("/clear", clear),
-                web.post("/prepare", prepare), web.get("/preview", preview), web.get("/paper", paper), web.get("/ink", ink)])
+                web.post("/prepare", prepare), web.get("/preview", preview), web.get("/paper", paper), web.get("/ink", ink),
+                web.get("/cards", cards), web.post("/cards/add", cards_add)])
 
 if __name__ == "__main__":
     os.makedirs(UPLOADS, exist_ok=True)

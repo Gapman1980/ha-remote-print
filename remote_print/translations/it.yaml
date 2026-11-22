@@ -41,5 +41,8 @@ configuration:
   ink_style:
     name: Stile livelli inchiostro
     description: "bars = barre orizzontali; tubes = una provetta di vetro per cartuccia con il liquido che ondeggia."
+  ink_wave:
+    name: Liquido che ondeggia
+    description: "Solo con ink_style tubes. Acceso = l'inchiostro nelle provette ondeggia; spento = il liquido resta fermo e salgono solo le bollicine. Le cartucce quasi finite si scuotono sempre."
 network:
   8099/tcp: "Porta per l accesso diretto (solo con lan_access acceso). Vuota = disattivata."
