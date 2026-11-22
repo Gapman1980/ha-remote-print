@@ -34,7 +34,7 @@ configuration:
     description: "Off = only through Home Assistant (safe, admins only). On = also at http://HOME-ASSISTANT-IP:PORT after you set a port in the Network section, so non-admin users can use it in a Webpage card. Only local network addresses are accepted, but ANYONE on your Wi-Fi can print: never forward this port on the router."
   allowed_users:
     name: Allowed non-admin users
-    description: "Home Assistant usernames (e.g. alisha) that can use Remote Print without being administrators. Administrators can always use it; empty list = administrators only."
+    description: "Not a pick list: press + and TYPE the Home Assistant username in the empty row (the login name, e.g. alisha; see Settings → People → Users), one per row. Or ⋮ → Edit in YAML. Then Save and restart the add-on. Administrators can always use it; empty list = administrators only."
   ink_sensors:
     name: Ink sensors (optional)
     description: "Only if the page does not show the levels by itself: the Home Assistant sensors with the percentage of each cartridge or toner, e.g. sensor.printer_black_ink. The bar colour is taken from the name (black, cyan, magenta, yellow). For other printers: ink_sensors with the names separated by commas."

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.5
+- **Clearer `allowed_users` help** (thanks Francesco): the option is not a list to pick users from. After pressing **+** you type
+  the Home Assistant username in the empty row (or use ⋮ → Edit in YAML), then save and restart. Text only, nothing else changes.
+
 ## 1.8.4
 - **Ink levels: fixed tubes that stayed empty with no percentage** (thanks @Eugenio-1204). Some printers answer through CUPS with
   the cartridge names but no levels: the add-on now tries the printer itself first (also `ipps://`) and uses a names-only answer

@@ -55,7 +55,8 @@ The log also prints the **Ingress URL** used by the dashboard popup example (see
 ## Notes
 
 - **Non-admin users** (1.5.0): add their Home Assistant **usernames** to `allowed_users` (e.g. `- alisha`), save and
-  restart. They open **Print** from the sidebar or the dashboard popup with their own login, also away from home.
+  restart. The list does not offer the users to choose from: after pressing **+** type the username in the empty row
+  (Settings → People → Users shows it), or use ⋮ → **Edit in YAML**. They open **Print** from the sidebar or the dashboard popup with their own login, also away from home.
   Administrators can always use it; other users see "Not allowed" (they can hide the sidebar entry).
 - Alternative for the local network only: turn on `lan_access`, set a port in **Network**, restart, then use a Webpage card with `http://HOME-ASSISTANT-IP:PORT/` (no password: anyone on your Wi-Fi can print; never forward the port; needs Home Assistant opened over `http://`).
 - With `brlaser` the printer does not report paper/toner state (no IPP), so alerts are not shown.
